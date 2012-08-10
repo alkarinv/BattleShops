@@ -1,0 +1,16 @@
+
+#intervalBetweenTransaction - How often can one person buy or sell to the shop? (In miliseconds: 1000ms = 1 sec)
+intervalBetweenTransactions: 200
+
+rightClickSignToOpenChest: false
+multiworld: true
+
+useMySQL: true
+SQLOptions:
+  url : "localhost"
+  port : "3306"
+  username: "root"
+  password: ""
+  db : "BattleShops"
+ 
+ 

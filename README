@@ -1,0 +1,68 @@
+Complete shop system using remote chests and signs.
+
+INSTALL
+----------
+updated for 1.3
+Just put the BattleChest.jar inside the plugins directory.
+Default configuration files will be created when the plugin is first loaded
+These can be modified later afterwards and they will not be deleted.
+Needed Jars:
+Vault or Register
+
+Suggested Jars:
+WorldGuard
+
+
+HOW TO USE
+------------
+Basic Usage:
+To use you must have a "Shop Chest" and a "Shop Sign", they can be created in any order and you can have more than 1 and create more than 1 at a time
+1) To create a "Shop Sign" create a sign just as you would a sign now
+Example Shop Sign  	      Example Shop Sign 2
+<blank>                          <blank>
+64                                  3
+15 : 3                             B 0.5
+Diamond                            22
+
+will create
+<my_player_name>             <my_player_name>
+64                                  3
+B 15 : 3 S                         B 0.5
+DIAMOND                        LAPIS_BLOCK
+
+1b) You can also link a previous Shop Sign by left-clicking with a redstone torch
+2) To create a "Shop Chest" simply left-click the chest with a redstone torch.
+If the chest is empty, it "Links" to any sign.  It will be able to buy/sell everything
+If the chest has items, it will ONLY "link" to signs that buy/sell only these types of items
+
+3) Buy and Sell as usual
+4) add other signs, chests with the same item.. link them all together.  You can have infinite "Shop Chests" all buying/selling cobble from the same Shop sign.
+
+------------
+Extra Functionality:
+a) To link signs from the old system, simply left click them with a redstone torch.
+1) To unlink a "Shop Chest" left click it again with the redstone torch
+
+2) Buy and Sell multiple quantities.
+type in the command
+'/shop buy <amount>x'  to buy multiples of the quantity shown on the sign.  The X IS IMPORTANT
+example
+'/shop buy 32x' and right-clicking on a sign that sells quantities of 3 would buy 96 items.
+
+'/shop sell <amount>x' and left-clicking on the sign will sell multiples
+
+3) Give "Shop Chest" permissions to other people, this allows them to use the chest without breaking the shop connection
+/shop add <playername>
+
+4) Remove "Shop Chest" permissions to other people
+/shop remove <playername>
+
+5) List who has access to your shop
+/shop list
+
+6) If you are an admin you can create an "ADMIN_SHOP" sign
+These admin signs do not need to be linked to a chest and can buy or sell infinite amounts of items
+
+
+------------------
+1.6.0: Added colored signs for Items

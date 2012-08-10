@@ -1,0 +1,59 @@
+english:
+    prefix: '&a[Shop] &f'
+    Somebody_sold_items_to_your_shop: '%s sold %s %s for %s to your shop!'
+    Somebody_bought_items_from_your_shop: '%s bought %s %s for %s!'
+    Your_shop_is_out_of_stock: 'Your %s shop is out of stock!  %s was buying!'
+    Your_shop_is_full: 'Your %s shop is full!  %s was selling!'
+    You_cannot_use_your_own_shop: "You can't use your own shop!"
+    
+    You_bought_items: 'You bought %s %s from %s for %s.'
+
+    Break_link : "&4[Warning!]&f A player has broken a chest link to your shop!"
+    Linked_sign : "Chest now links %s %s that %s %s"
+    Unlinked_sign : "Chest is ready to buy/sell but currently is linked to no signs"
+    Linked_everything : "Chest now links to every sign"
+    Unlink_chest : "You have unlinked this chest"
+    Unlink_only_chests : "You can only unlink chests!"
+    
+    Your_inventory_is_full: 'Your inventory can not hold this amount of items!'
+    You_have_got_not_enough_money: "You don't have enough money!"
+    Shop_is_out_of_stock: 'This shop does not have %s items in stock!'
+
+    You_have_not_enough_items: 'You do not have %s items to sell!'
+    You_sold_items: "You sold %s %s for %s to %s's shop."
+    Chest_is_full: 'This chest can not hold %s more items!'
+
+    No_chests_attached : "This shop has no chests attached that sell %s"
+    Seller_has_not_enough_money: "Seller has not enough money!"
+    Seller_has_no_account: "Seller's account doesn't exist, contact an admin to set up your iConomy Account!"
+    Buyer_has_no_account: "Buyer's account doesn't exist, contact an admin to set up your iConomy Account!"
+    Buyer_cant_fit_this_many: "This shop can not buy %s more items!"
+    Seller_cant_sell_this_many: "This shop can not sell %s more items!"
+    No_selling_to_this_shop: "Shop owner doesn't want you to sell here!"
+    No_buying_from_this_shop: "Shop owner doesn't want you to buy here!"
+
+    Your_balance: 'After transaction you have %s.'
+
+    Shop_is_created: 'Your shop has been successfully created!'
+    Shop_cannot_be_created: "You have no chest set up!"
+    Shop_was_LWC_protected: "Your shop was successfully protected with LWC."
+
+    Mode_changed_to_sell: 'Mode set to selling!'
+    Mode_changed_to_buy: 'Mode set to buying!'
+
+    You_tried_to_steal: "Don't steal!"
+    wait: "&4Wait!"
+
+    Sneaking: "You can not perform a transaction while sneaking!"
+    iteminfo: "&aItem ID and names:"
+    incorrectID: "Incorrect item ID or name!"
+    Couldnt_fit_on_sign: "Couldn't fit something on the sign!"
+    Negative_price: "Can't make shop with negative buy/sell price!"
+    Incorrect_price: "This price is too high/low!"
+    Incorrect_item_amount: "The item amount you specified is invalid!"
+    
+    transaction_list: "&6%s:&e%s %s %s %s %s &6%s"
+    shoptransaction_list: "&6%s:&e%s %s %s %s %s %s &6%s"
+    transaction_list_total: "&eLast %s - Bought &6%s&e  Sold &6%s&e -"
+    shoptransaction_list_total: "&eLast %s - Shop Purchases &6%s&e  Shop Sales &6%s&e -"
+
