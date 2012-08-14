@@ -310,7 +310,6 @@ public class MySQLSerializer implements BCSStorageController{
 					sb.append( "('" + player+"','" + associate + "')");
 					first = false;
 				}
-
 			}			
 		}
 		if (found_associate){

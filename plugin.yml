@@ -1,0 +1,49 @@
+name: BattleShops
+
+main: com.alk.battleShops.BattleShops
+
+version: 3.0.7
+softdepend: [Vault, Register, Multiverse-Core, Craftconomy]
+
+author: Alkarin
+description: >
+             Complete shop system using remote chests and signs.
+commands:
+  shop:
+    aliases:
+    description: used to buy or sell multiples of the quantity listed
+    usage: |
+           /shop buy <multiple>x : Example /shop buy 64x : must be an integer >0 |
+           /shop sell <multiple>x : Example /shop sell 64x : must be an integer >0 |
+           /shop add <playername> : Add a player to your chest permissions |
+           /shop remove <playername> : Remove a player to your chest permissions |
+           /shop list : See who currently has permissions to your chests
+  link:
+    description: Link the item specified
+    usage: |
+           /link <item_name>
+  shopclean:
+    description: Clean up signs
+  unlink:
+    description: Unlink the item specified
+    usage: |
+           /Unlink <item_name>
+  shopactive:
+    aliases: [sa,pa,playeractivity,playeractive]
+    description: >
+      Admin Only: Tells the Date since last player login, last shop update, last shop transaction. blank for a list of 10 most inactive ppl
+    usage: |
+           /<command> [playername]
+  shoptransactions:
+    aliases: [shoptransaction,str]
+    description: >
+            Shows the transactions for a given shop
+    usage: |
+            /<command>  
+  playertransactions:
+    aliases: [playertransaction,ptr]
+    description: >
+             Shows the transactions for a given player
+    usage: |
+             /<command>
+

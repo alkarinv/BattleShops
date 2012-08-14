@@ -1,7 +1,5 @@
 package com.alk.battleShops.util;
 
-import me.greatman.Craftconomy.Account;
-import me.greatman.Craftconomy.AccountHandler;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
@@ -13,6 +11,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.alk.battleShops.BattleShops;
+import com.nijikokun.register.payment.Methods;
 
 public class MoneyController implements Listener{
 	static boolean hasVault = false;
@@ -21,49 +20,36 @@ public class MoneyController implements Listener{
 	public static Economy economy = null;
 
 	public static boolean hasAccount(String name) {
-		return AccountHandler.getAccount(name) != null;
-//		return useVault? economy.hasAccount(name) : Methods.getMethod().hasAccount(name);
+		return useVault? economy.hasAccount(name) : Methods.getMethod().hasAccount(name);
 	}
-	public static boolean hasEnough(String name, double amount, World world) {
-		Account ac = AccountHandler.getAccount(name);
-		if (ac == null){ Log.err("[BattleShops] Account" +name +" doesnt exist");}
-		return ac.hasEnough(amount, world);
-//		return hasEnough(name, (float) amount);
+	public static boolean hasEnough(String name, float amount,World w) {
+		return useVault? economy.getBalance(name) >= amount :Methods.getMethod().getAccount(name).hasEnough(amount); 
 	}
-//	public static boolean hasEnough(String name, float amount) {
-//		return useVault? economy.getBalance(name) >= amount :Methods.getMethod().getAccount(name).hasEnough(amount); 
-//	}
+	public static boolean hasEnough(String name, float amount) {
+		return hasEnough(name,amount,null); 
+	}
 	public static void subtract(String name, double amount, World world) {
-//		subtract(name,(float) amount);
-		Account ac = AccountHandler.getAccount(name);
-		if (ac == null){ Log.err("[BattleShops] Account" +name +" doesnt exist");}
-		ac.substractMoney(amount, world);
+		subtract(name,(float) amount);
 	}
-//	public static void subtract(String name, float amount) {
-//		if (useVault) economy.withdrawPlayer(name, amount); 
-//		else Methods.getMethod().getAccount(name).subtract(amount);	
-//	}
+	public static void subtract(String name, float amount) {
+		if (useVault) economy.withdrawPlayer(name, amount); 
+		else Methods.getMethod().getAccount(name).subtract(amount);	
+	}
 	public static void add(String name, float amount, World world) {
-//		try{
-//			if (useVault){economy.depositPlayer(name, amount) ;}
-//			else Methods.getMethod().getAccount(name).add(amount);
-//		} catch (Exception e){
-//			Log.err("[BattleShops] Couldnt deposit " + amount +" into " + name+"'s account.  is an economy plugin in?");
-//			e.printStackTrace();
-//		}
-		Account ac = AccountHandler.getAccount(name);
-		if (ac == null){ Log.err("[BattleShops] Account" +name +" doesnt exist");}
-		ac.addMoney(amount, world);
+		try{
+			if (useVault){economy.depositPlayer(name, amount) ;}
+			else Methods.getMethod().getAccount(name).add(amount);
+		} catch (Exception e){
+			Log.err("[BattleShops] Couldnt deposit " + amount +" into " + name+"'s account.  is an economy plugin in?");
+			e.printStackTrace();
+		}
 	}
 	public static Double balance(String name,World world) {
-//		return useVault ? economy.getBalance(name) : Methods.getMethod().getAccount(name).balance();
-		Account ac = AccountHandler.getAccount(name);
-		if (ac == null){ Log.err("[BattleShops] Account" +name +" doesnt exist");}
-		return ac.getBalance(world);
+		return useVault ? economy.getBalance(name) : Methods.getMethod().getAccount(name).balance();
 	}
-//	public static void add(String name, double amount) {
-//		add(name,(float)amount);
-//	}
+	public static void add(String name, double amount) {
+		add(name,(float)amount);
+	}
 
 	public static void setup() {
 		checkRegisteredPlugins();
