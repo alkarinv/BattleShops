@@ -2,6 +2,7 @@ package com.alk.battleShops.controllers;
 
 import java.io.File;
 
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 /**
  * 
@@ -35,5 +36,8 @@ public class ConfigController {
 	}
 	public static boolean contains(String string) {
 		return config.contains(string);
+	}
+	public static FileConfiguration getConfig() {
+		return config;
 	}
 }

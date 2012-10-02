@@ -45,8 +45,9 @@ public class Defaults {
 	public static final Integer EVERYTHING_ID = 13377;
 	public static final String EVERYTHING_NAME = "EVERYTHING";
 
-	public static final String ADMIN_NAME = "ADMIN SHOP";
-	public static final String LANGUAGE = "english";
+	public static String ADMIN_NAME = "ADMIN SHOP";
+	public static String ADMIN_STR = "ADMIN";
+	public static String LANGUAGE = "english";
 
 	public static final int SAVE_EVERY_X_SECONDS = 60*10;  /// Save Every 10 minutes 
 

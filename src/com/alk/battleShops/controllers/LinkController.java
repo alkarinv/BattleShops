@@ -1,23 +1,21 @@
 package com.alk.battleShops.controllers;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 
-import com.alk.battleShops.BattleShops;
 import com.alk.battleShops.Defaults;
 import com.alk.battleShops.objects.Shop;
 import com.alk.battleShops.objects.ShopChest;
 import com.alk.battleShops.objects.ShopOwner;
 import com.alk.battleShops.objects.ShopSign;
 import com.alk.battleShops.objects.WorldShop;
+import com.alk.battleShops.util.KeyUtil;
 import com.alk.battleShops.util.Util;
 
 /**
@@ -29,39 +27,42 @@ public class LinkController {
 
 //	Map<String, Timer> timers = new HashMap<String, Timer>();
 	Map<String, Integer> bukkittimers = new HashMap<String, Integer>();
-	Map<String, OwnChestClickedTimerTask> ownTasks= new HashMap<String, OwnChestClickedTimerTask>();
+//	Map<String, OwnChestClickedTimerTask> ownTasks= new HashMap<String, OwnChestClickedTimerTask>();
 
-	class OwnChestClickedTimerTask extends Thread {
-		World w;
-		ShopOwner so;
-		Set<Integer> ids;
-		public OwnChestClickedTimerTask(World w, ShopOwner so) {
-			this.w = w;
-			this.so = so;
-			this.ids = new HashSet<Integer>();
-		}
-		/**
-		 * Timer has gone off, cancel old command
-		 */
-        public void run() {
-        	String sokey = ShopOwner.getShopOwnerKey(so);
-        	Integer id = bukkittimers.get(sokey);
-    		try{
-        		Bukkit.getServer().getScheduler().cancelTask(id);
-        		} catch(Exception e){}
-
-        	bukkittimers.remove(sokey);
-
-        	WorldShop.updateAffectedSigns(w, so, ids);
-        }
-        public void addIds(Set<Integer> ids){
-        	this.ids.addAll(ids);
-        }
-    }
+//	class OwnChestClickedTimerTask extends Thread {
+//		World w;
+//		ShopOwner so;
+//		Set<Integer> ids;
+//		public OwnChestClickedTimerTask(World w, ShopOwner so) {
+//			this.w = w;
+//			this.so = so;
+//			this.ids = new HashSet<Integer>();
+//		}
+//		/**
+//		 * Timer has gone off, cancel old command
+//		 */
+//        public void run() {
+//        	String sokey = ShopOwner.getShopOwnerKey(so);
+//        	Integer id = bukkittimers.get(sokey);
+//    		try{
+//        		Bukkit.getServer().getScheduler().cancelTask(id);
+//        		} catch(Exception e){}
+//
+//        	bukkittimers.remove(sokey);
+//
+//        	WorldShop.updateAffectedSigns(w, so, ids);
+//        }
+//        public void addIds(Set<Integer> ids){
+//        	this.ids.addAll(ids);
+//        }
+//    }
 
 	public void chestClick(Chest chest, Player player, boolean isLeftClick) {
 		if (isLeftClick){ /// dont care if its a left click
 			return;}
+		if (PermissionController.isAdmin(player)){ /// dont care if its an admin
+			return;}
+		
 		ShopChest schest = WorldShop.getShopChest(chest);
 		if (schest == null || isLeftClick)  
 			return;
@@ -70,17 +71,10 @@ public class LinkController {
 			return;}
 		World w = schest.getWorld();
 		ShopOwner newOwner = new ShopOwner(player);		
-		boolean playerIsAdmin = PermissionController.isAdmin(player);
 		Shop prevOwnerShop = WorldShop.getShop(chest.getWorld(), prevOwner);
 		
 		Boolean hasShopPermission = prevOwnerShop != null ? prevOwnerShop.playerHasPermission(player) : false;
-		if (playerIsAdmin || hasShopPermission ){
-			/// Clicking on your own shop might mean a change in inventory
-			/// If not bukkitcontrib/spout implemented we need another way to figure out change in inv
-			/// A kludge is just recheck our signs after a period of time
-			/// Only need to check right click events
-			if (!isLeftClick)
-				setClickTimer(w, prevOwner, schest.getItemIds());
+		if (hasShopPermission ){
 			return; /// Clicking on your own shop does nothing, or if the person has permission
 		} else {
 			/// new Owner of this chest, remove previous
@@ -91,34 +85,34 @@ public class LinkController {
 			return;	
 		}
 	}
-
-	public void setClickTimer(World w, ShopOwner so, Set<Integer> ids) {
-    	String sokey = ShopOwner.getShopOwnerKey(so);
-    	OwnChestClickedTimerTask occtt ;
-    	Integer oldid = bukkittimers.get(sokey);
-    	if (oldid != null){
-    		try{
-    		Bukkit.getServer().getScheduler().cancelTask(oldid);
-    		occtt = ownTasks.get(sokey);
-    		} catch(Exception e){
-        		occtt = new OwnChestClickedTimerTask(w,so);
-    		}
-    	} else {
-    		occtt = new OwnChestClickedTimerTask(w,so);
-    	}
-
-    	occtt.addIds(ids);
-    	int id = Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(BattleShops.getSelf(),
-    			occtt, Defaults.SECONDS_TILL_CHESTUPDATE * 20);
-    	bukkittimers.put(sokey, id);
-    	ownTasks.put(sokey, occtt);
-
-//    	Timer timer = timers.get(sokey);
-//		try { if (timer != null) timer.cancel();} catch (Exception e){}/// Get rid of timer
-//		timer = new Timer();
-//        timer.schedule(new OwnChestClickedTimerTask(so,ids), Defaults.SECONDS_TILL_CHESTUPDATE*1000);
-//        timers.put(sokey, timer);
-	}
+//
+//	public void setClickTimer(World w, ShopOwner so, Set<Integer> ids) {
+//    	String sokey = ShopOwner.getShopOwnerKey(so);
+//    	OwnChestClickedTimerTask occtt;
+//    	Integer oldid = bukkittimers.get(sokey);
+//    	if (oldid != null){
+//    		try{
+//    		Bukkit.getServer().getScheduler().cancelTask(oldid);
+//    		occtt = ownTasks.get(sokey);
+//    		} catch(Exception e){
+//        		occtt = new OwnChestClickedTimerTask(w,so);
+//    		}
+//    	} else {
+//    		occtt = new OwnChestClickedTimerTask(w,so);
+//    	}
+//
+//    	occtt.addIds(ids);
+//    	int id = Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(BattleShops.getSelf(),
+//    			occtt, Defaults.SECONDS_TILL_CHESTUPDATE * 20);
+//    	bukkittimers.put(sokey, id);
+//    	ownTasks.put(sokey, occtt);
+//
+////    	Timer timer = timers.get(sokey);
+////		try { if (timer != null) timer.cancel();} catch (Exception e){}/// Get rid of timer
+////		timer = new Timer();
+////        timer.schedule(new OwnChestClickedTimerTask(so,ids), Defaults.SECONDS_TILL_CHESTUPDATE*1000);
+////        timers.put(sokey, timer);
+//	}
 
 	
 	public void activateChestShop(Chest chest, Player player) {
@@ -131,7 +125,6 @@ public class LinkController {
 		ShopOwner prevOwner = (schest != null) ? schest.getOwner() : null;
 		World w = chest.getWorld();
 		if (Defaults.DEBUG_LINKING) System.out.println(prevOwner + "------------" + newOwner);
-//		boolean hasPermission = PermissionController.hasPermissions(player, chest.getBlock());
 
 		if (prevOwner != null){
 			/// We want to unactivate if we have clicked on a chest twice
@@ -156,7 +149,7 @@ public class LinkController {
 			ShopOwner.sendMsgToOwner(prevOwner, MessageController.getMessage("Break_link"));			
 		}
 
-
+		/// Add shop to WorldShop
 		Shop shop = WorldShop.addShop(w,newOwner);
 		ShopChest shopchest ;
 		if (items != null){
@@ -166,9 +159,9 @@ public class LinkController {
 		}
 
 		HashMap<String,Integer> linked = shop.addChest(shopchest);
-
 		WorldShop.addShopChest(shopchest);
 
+		/// Deal with linking
 		if (linked != null && linked.size() > 0){
 			for (String item_name : linked.keySet()){
 				if (item_name.compareTo(Defaults.EVERYTHING_NAME) == 0){
@@ -182,8 +175,10 @@ public class LinkController {
 		} else {
 			player.sendMessage(MessageController.getMessage("Unlinked_sign"));
 		}
+		
 		WorldShop.updateAffectedSigns(w,newOwner, shopchest.getItemIds());
-		if (Defaults.DEBUG_LINKING) System.out.println("   activateCompleted");
+		if (Defaults.DEBUG_LINKING) System.out.println("   activateCompleted  " + newOwner +"  " + 
+				shopchest +"   loc " + KeyUtil.getStringLoc(shopchest));
 		if (Defaults.DEBUG_LINKING) WorldShop.printShops();
 	}
 	

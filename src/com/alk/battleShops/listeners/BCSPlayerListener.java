@@ -1,10 +1,15 @@
 package com.alk.battleShops.listeners;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,9 +18,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemStack;
 
+import com.alk.battleShops.BattleShops;
 import com.alk.battleShops.Defaults;
 import com.alk.battleShops.Exceptions.SignFormatException;
 import com.alk.battleShops.controllers.ConfigController;
@@ -24,6 +39,7 @@ import com.alk.battleShops.controllers.MessageController;
 import com.alk.battleShops.controllers.PermissionController;
 import com.alk.battleShops.controllers.TransactionController;
 import com.alk.battleShops.objects.Shop;
+import com.alk.battleShops.objects.ShopChest;
 import com.alk.battleShops.objects.ShopOwner;
 import com.alk.battleShops.objects.ShopSign;
 import com.alk.battleShops.objects.SignValues;
@@ -37,14 +53,14 @@ import com.alk.battleShops.util.Util;
  *
  */
 public class BCSPlayerListener implements Listener  {
-
-
 	public static final int BUY_INT = 0;
 	public static final int SELL_INT = 1;
 
 	public static int interval;
 	private HashMap<String, Long> userTime = new HashMap<String, Long>();
 	private HashMap<String, Long> userCommandTime = new HashMap<String, Long>();
+
+	private ConcurrentHashMap<String,Location> checkClicked = new ConcurrentHashMap<String,Location>();
 
 	private HashMap<String, Pair<Integer, Integer>> userMultiplier = 
 			new HashMap<String, Pair<Integer,Integer>>();
@@ -55,95 +71,95 @@ public class BCSPlayerListener implements Listener  {
 		linkController = link;
 		this.tc = tc;
 	}
-	
-	@EventHandler
-	public void onInventoryCloseEvent(final InventoryCloseEvent event){
-		
+
+	public void closePlayerInventory(Player p){
+		Location loc = checkClicked.remove(p.getName());
+		if (loc != null){
+			ShopChest sc = WorldShop.getShopChest(loc);
+			if (sc == null)
+				return;
+
+			WorldShop.updateAffectedSigns(loc.getWorld(), sc.getOwner(), sc.getItemIds());
+		}
 	}
+
+	@EventHandler
+	public void onInventoryOpenEvent(final InventoryOpenEvent event){
+		Inventory inventory = event.getView().getTopInventory();
+		if(inventory.getType() != InventoryType.CHEST){
+			return;}
+		final InventoryHolder ih = inventory.getHolder();
+		/// the ih can really be null?? obviously it can in some cases.  so now I must check for it
+		if (ih == null || !(ih instanceof DoubleChest || ih instanceof Chest)) 
+			return;
+
+		final Location cloc = (ih instanceof DoubleChest) ?  ((DoubleChest) ih).getLocation() : ((Chest) ih).getLocation();
+		ShopChest sc = WorldShop.getShopChest(cloc);
+		if (sc == null)
+			return;
+		checkClicked.put(event.getPlayer().getName(), cloc);
+	}
+
 	@EventHandler
 	public void onInventoryClickEvent(final InventoryClickEvent event){
-//		event.g
+		if (!checkClicked.containsKey(event.getWhoClicked().getName()))
+			return;
+		InventoryView iv = event.getView();
+		if (iv.getTopInventory().getType() != InventoryType.CHEST ){
+			return;}
+		
+		final InventoryHolder ih = iv.getTopInventory().getHolder();
+		if (ih == null)
+			return;
+		
+		ItemStack curItem = event.getCurrentItem();
+		ItemStack cursorItem = event.getCursor();
+		boolean shiftClick = event.isShiftClick();
+		SlotType st = event.getSlotType();
+
+		final int endChestSlots = ih instanceof DoubleChest ? 53 : 26; /// 54 -1, and 27 -1 
+		boolean clickPlayerInventory = st==SlotType.QUICKBAR || 
+				(event.getInventory().getType() == InventoryType.PLAYER) ||
+				(event.getRawSlot() > endChestSlots && iv.getBottomInventory().getType()==InventoryType.PLAYER);
+		if (clickPlayerInventory && !shiftClick){
+			return;
+		}
+		boolean curItemEmpty = curItem == null || curItem.getType() == Material.AIR;
+		boolean cursorItemEmpty = cursorItem == null || cursorItem.getType() == Material.AIR;
+		final Player p = (Player) event.getWhoClicked();
+		final ShopOwner so = new ShopOwner(p);
+		final HashSet<Integer> ids = new HashSet<Integer>();
+		if (!curItemEmpty){
+			ids.add(ShopSign.getShopItemID(curItem));
+		} 
+		if (!cursorItemEmpty){
+			ids.add(ShopSign.getShopItemID(cursorItem));
+		}
+		Bukkit.getScheduler().scheduleSyncDelayedTask(BattleShops.getSelf(), new Runnable(){
+			public void run() {
+				WorldShop.updateAffectedSigns(p.getWorld(), so, ids);				
+			}			
+		});
 	}
-//	@EventHandler
-//	public void onInventoryClickEvent(final InventoryClickEvent event){
-//		InventoryView iv = event.getView();
-//		final Player p = (Player) event.getWhoClicked();
-//		ItemStack curItem = event.getCurrentItem();
-//		ItemStack cursorItem = event.getCursor();
-//		boolean shiftClick = event.isShiftClick();
-//		boolean leftClick = event.isLeftClick();
-//		boolean rightClick = event.isRightClick();
-//		boolean isTopShopChest = iv.getTopInventory().getType() == InventoryType.CHEST;
-//		SlotType st = event.getSlotType();
-//		boolean clickPlayerInventory = st==SlotType.QUICKBAR || 
-//				(event.getInventory().getType() == InventoryType.PLAYER) ||
-//				(event.getRawSlot() > 26 && iv.getBottomInventory().getType()==InventoryType.PLAYER);
-//		Log.info("   InventoryView = " +iv.getTitle()+" "+event.getSlotType() +" " + event.getRawSlot() + " iv " +iv.getTopInventory().getType() + " " +iv.getBottomInventory().getType());
-//		Log.info("  cur item = " + event.getCurrentItem() +"  cursor=" + event.getCursor() +"  shift="+shiftClick+"  " + leftClick+":" + rightClick +
-//				"  clickononPlayerinv="+clickPlayerInventory);
-//		if (!isTopShopChest ){
-//			Log.info("Skipping b/c its not a shop chest= " + curItem);
-//			return;
-//		}
-//		if (clickPlayerInventory && !shiftClick){
-//			Log.info("Skipping b/c we are dealing with player inv stuff = " + curItem);
-//			return;
-//		}
-//		boolean curItemEmpty = curItem == null || curItem.getType() == Material.AIR;
-//		boolean cursorItemEmpty = cursorItem == null || cursorItem.getType() == Material.AIR;
-//		if (event.getInventory().getType() == InventoryType.PLAYER){
-//			Log.info("Skipping Player clicking own inv= " + curItem);
-//			return;			
-//		}
-//		if (!curItemEmpty && !cursorItemEmpty){ /// they are buying something with something in their hands
-//			if (curItem.getType() != cursorItem.getType()){ /// This is really a buy of one type.. with a sell of another
-//				event.setCancelled(true);
-//				Log.info("  buy/sell case");
-//				return;
-//			}
-//			//			
-//			//			Log.info("  handling a double case... skipping ");
-//			return;			
-//
-//		}
-//		//		else if ( curItemEmpty && !cursorItemEmpty && shiftClick){ /// selling case... but with shift click becomes buying
-//		//			Log.info("Buying shiftclick ??= " + cursorItem.getAmount() +"  " + cursorItem);
-//		//			return;	
-//		//		} 
-//		//		else if ( curItemEmpty && !cursorItemEmpty && rightClick){ /// buying with rightclick.. which gives half the items
-//		//			Log.info("Buying rightclick ??= " + cursorItem.getAmount() +"  " + cursorItem);
-//		//		} 
-//		else if ( !curItemEmpty && cursorItemEmpty && rightClick){ /// buying case??
-//			int amount = (int) Math.ceil((float)curItem.getAmount()/2.0f);
-//			Log.info("Buying rightclick ??= " + amount +"  " + curItem);
-//		}
-//		else if ( !curItemEmpty && cursorItemEmpty){ ///
-//			if (shiftClick && clickPlayerInventory){ /// selling an entire stack
-//				Log.info("Selling ??= " + curItem.getAmount() +"  " + curItem);								
-//			} else {
-//				Log.info("Buying ??= " + curItem.getAmount() +"  " + curItem);				
-//			}
-//			return;
-//		}
-//		else if ( curItemEmpty && !cursorItemEmpty){ /// selling case??
-//			Log.info("Selling ??= " + cursorItem.getAmount() +"  " + cursorItem);
-//			return;			
-//		} else {
-//			Log.info("  Nothing ");
-//			return;
-//		}
-//		//		MessageController.sendMessage(p, "&c onInv =  item = " + event.getCurrentItem() +"  cursor=" + event.getCursor());
-//		//		Bukkit.getScheduler().scheduleSyncDelayedTask(BattleShops.getSelf(), new Runnable(){
-//		//			public void run() {
-//		//				Inventory i = p.getInventory();
-//		//				i.getType();
-//		//				Log.info("onRun iteminhand="+ p.getItemInHand() +"  " + p.getItemOnCursor()+")");
-//		//				MessageController.sendMessage(p, "&2 onRun iteminhand="+ p.getItemInHand() +"  " + p.getItemOnCursor()+")");
-//		//				event.setCancelled(true);
-//		//			}
-//		//			
-//		//		});
-//	}
+
+	@EventHandler
+	public void onInventoryCloseEvent(final InventoryCloseEvent event){
+		Inventory inventory = event.getView().getTopInventory();
+		if(inventory.getType() != InventoryType.CHEST){
+			return;}
+		final InventoryHolder ih = inventory.getHolder();
+		/// the ih can really be null?? obviously it can in some cases.  so now I must check for it
+		if (ih == null || !(ih instanceof DoubleChest || ih instanceof Chest)) 
+			return;
+
+		final Location cloc = (ih instanceof DoubleChest) ?  ((DoubleChest) ih).getLocation() : ((Chest) ih).getLocation();
+		ShopChest sc = WorldShop.getShopChest(cloc);
+		if (sc == null)
+			return;
+
+		checkClicked.remove(event.getPlayer().getName());
+		WorldShop.updateAffectedSigns(cloc.getWorld(), sc.getOwner(), sc.getItemIds());
+	}
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.isCancelled()) return;
@@ -208,7 +224,7 @@ public class BCSPlayerListener implements Listener  {
 			SignValues sv = null;
 			try {
 				sv = ShopSign.parseShopSign(sign.getLines());
-				boolean isAdminSign = ShopOwner.isAdmin(sign.getLine(0));
+				boolean isAdminSign = ShopOwner.isAdminShop(sign.getLine(0));
 				if (sv != null && !isAdminSign){
 					sign.setLine(1, sv.quantity + ": U");
 					sign.update(true);
@@ -312,22 +328,18 @@ public class BCSPlayerListener implements Listener  {
 				boolean isAdminShop = tss.isAdminShop();
 				if (isAdminShop){
 					if (isAdminPlayer){
-						player.sendMessage("This sign is already active ");	
-					} else {
-						return;
-					}
-				} else {
-
-				}
-				if (isAdminPlayer && !isAdminShop){
-					player.sendMessage("Admins can't link other peoples shops ");
+						player.sendMessage(MessageController.getMessage("sign_already_active"));}
+					return;
+				} 
+				if (isAdminPlayer && !isAdminShop && !tss.getOwner().getName().equalsIgnoreCase(player.getName())){
+					player.sendMessage(MessageController.getMessage("admins_cant_link_other_shops"));
 					return;/// Admins cant link other shops
 				}	        	
 				if (!isAdminPlayer && !isAdminShop){
 					Shop s = WorldShop.getShop(csign.getWorld(),new ShopOwner(event.getPlayer()));
 					if (s!= null){
 						int chestCount = s.getNumChestsAttachedToSign(tss);
-						player.sendMessage("This sign already links to " +chestCount  + " " + Util.getChestOrChests(chestCount));
+						player.sendMessage(MessageController.getMessage("sign_already_links",chestCount,Util.getChestOrChests(chestCount)));
 						return;
 					}
 
@@ -351,7 +363,7 @@ public class BCSPlayerListener implements Listener  {
 				if (!isAdminShop){
 					WorldShop.updateAffectedSigns(so,ss);		
 				} else {
-					player.sendMessage("You have activated an admin shop");
+					player.sendMessage(MessageController.getMessage("activated_admin_shop"));
 				}
 
 			}
@@ -360,7 +372,7 @@ public class BCSPlayerListener implements Listener  {
 
 	public void setBuyCommand(Player player, int multiplier) {
 		if (multiplier < 1 || multiplier > Defaults.MULTIPLIER_LIMIT){
-			player.sendMessage("You must specify a multiplier between 1 and " + Defaults.MULTIPLIER_LIMIT);
+			player.sendMessage(MessageController.getMessage("multiplier_bounds", Defaults.MULTIPLIER_LIMIT));
 			return;
 		}
 
@@ -375,7 +387,7 @@ public class BCSPlayerListener implements Listener  {
 
 	public void setSellCommand(Player player, int multiplier) {
 		if (multiplier < 1 || multiplier > Defaults.MULTIPLIER_LIMIT){
-			player.sendMessage("You must specify a multiplier between 1 and " + Defaults.MULTIPLIER_LIMIT);
+			player.sendMessage(MessageController.getMessage("multiplier_bounds", Defaults.MULTIPLIER_LIMIT));
 			return;
 		}
 		cancelCommandTimer(player);
@@ -387,5 +399,14 @@ public class BCSPlayerListener implements Listener  {
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		WorldShop.onPlayerLogin(event.getPlayer().getName());
+	}
+
+	@EventHandler
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		closePlayerInventory(event.getPlayer());
+	}
+	@EventHandler
+	public void onPlayerKick(PlayerKickEvent event) {
+		closePlayerInventory(event.getPlayer());
 	}
 }

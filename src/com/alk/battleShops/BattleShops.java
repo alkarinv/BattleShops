@@ -18,7 +18,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.alk.battleShops.Serializers.BCSStorageController;
-import com.alk.battleShops.Serializers.MySQLSerializer;
+import com.alk.battleShops.Serializers.SQLInstance;
 import com.alk.battleShops.controllers.BCSExecutor;
 import com.alk.battleShops.controllers.ConfigController;
 import com.alk.battleShops.controllers.FileController;
@@ -26,6 +26,7 @@ import com.alk.battleShops.controllers.LinkController;
 import com.alk.battleShops.controllers.MessageController;
 import com.alk.battleShops.controllers.PermissionController;
 import com.alk.battleShops.controllers.TransactionController;
+import com.alk.battleShops.controllers.YamlFileUpdater;
 import com.alk.battleShops.listeners.BCSBlockListener;
 import com.alk.battleShops.listeners.BCSOnSignChangeListener;
 import com.alk.battleShops.listeners.BCSPlayerListener;
@@ -37,6 +38,7 @@ import com.alk.battleShops.util.InventoryUtil;
 import com.alk.battleShops.util.Log;
 import com.alk.battleShops.util.MoneyController;
 import com.alk.battleShops.util.MyLogger;
+import com.alk.serializers.SQLSerializerConfig;
 
 
 /**
@@ -88,8 +90,6 @@ public class BattleShops extends JavaPlugin {
 
         permissionController.loadPermissions();
 
-        /// Load Our Shops
-        loadShops();
         logger = new MyLogger(sc);
         transactionController = new TransactionController(logger);
         playerListener = new BCSPlayerListener(linkController,transactionController);
@@ -112,6 +112,7 @@ public class BattleShops extends JavaPlugin {
             	FileLogger.saveAll();
             }
             }, 60*1000, Defaults.SAVE_EVERY_X_SECONDS * 1000);
+		FileLogger.init(); /// shrink down log size
 
         Log.info("[" + pluginname + "]" + " version " + version + " initialized!");
 	}
@@ -119,23 +120,37 @@ public class BattleShops extends JavaPlugin {
 	private void loadConfigFiles() {
         ConfigController.setConfig(
         		load(getClass().getResourceAsStream(Defaults.DEFAULT_CONFIGURATION_FILE), Defaults.CONFIGURATION_FILE));
+        YamlFileUpdater yfu = new YamlFileUpdater();
+        MessageController mc = new MessageController();
+        MessageController.setConfig(load(getClass().getResourceAsStream(Defaults.DEFAULT_MESSAGES_FILE), Defaults.MESSAGES_FILE));
+        yfu.updateMessageSerializer(mc);
         MessageController.setConfig(
-        		load(getClass().getResourceAsStream(Defaults.DEFAULT_MESSAGES_FILE), Defaults.MESSAGES_FILE));		
+        		load(getClass().getResourceAsStream(Defaults.DEFAULT_MESSAGES_FILE), Defaults.MESSAGES_FILE));
+        MessageController.load();
         if (ConfigController.contains("multiworld")){
         	Defaults.MULTIWORLD = ConfigController.getBoolean("multiworld");
         }
-        if (ConfigController.getBoolean("useMySQL")){
-        	String p = "SQLOptions.";
-        	MySQLSerializer.URL = ConfigController.getString(p +"url");
-        	MySQLSerializer.PORT = ConfigController.getString(p +"port");
-        	MySQLSerializer.USERNAME = ConfigController.getString(p +"username");
-        	MySQLSerializer.PASSWORD = ConfigController.getString(p +"password");
-        	MySQLSerializer.DB = ConfigController.getString(p +"db");
-        }
+        SQLInstance sql = new SQLInstance();
+		SQLSerializerConfig.configureSQL(this, sql,
+				ConfigController.getConfig().getConfigurationSection("SQLOptions"));
+
+        if (ConfigController.contains("admin_shop"))
+        	Defaults.ADMIN_NAME = ConfigController.getString("admin_shop");
+        if (ConfigController.contains("admin_string"))
+        	Defaults.ADMIN_STR = ConfigController.getString("admin_string");
+
+        if (ConfigController.contains("language"))
+        	Defaults.LANGUAGE = ConfigController.getString("language");
+
         int interval;
         if((interval = ConfigController.getInt("intervalBetweenTransactions")) == 0){
             interval = DEFAULT_INTERVAL;}
         BCSPlayerListener.interval = interval;
+        
+        sql.init();
+        sc = sql;
+		sc.loadAll();
+		
 	}
 
 	public File load(InputStream inputStream, String config_file) {
@@ -160,16 +175,6 @@ public class BattleShops extends JavaPlugin {
 		sc.saveAll();
 	}
 
-	void loadShops(){
-		if (ConfigController.getBoolean("useMySQL")){
-			MySQLSerializer sql = new MySQLSerializer();
-			sql.init();
-			sc = sql;
-		} 
-		sc.loadAll();
-//		WorldShop.printShops();
-	}
-	
 	public void onDisable() {
         this.getServer().getScheduler().cancelAllTasks();
         PluginDescriptionFile pdfFile = this.getDescription();

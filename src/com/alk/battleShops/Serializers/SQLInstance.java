@@ -1,22 +1,18 @@
 package com.alk.battleShops.Serializers;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Formatter;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.MissingFormatArgumentException;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
@@ -39,16 +35,15 @@ import com.alk.battleShops.objects.Transaction;
 import com.alk.battleShops.objects.WorldShop;
 import com.alk.battleShops.util.KeyUtil;
 import com.alk.battleShops.util.Log;
+import com.alk.serializers.SQLSerializer;
 
 /**
  * 
  * @author Alkarin
  *
  */
-public class MySQLSerializer implements BCSStorageController{
+public class SQLInstance extends SQLSerializer implements BCSStorageController{
 	static final boolean DEBUG = false;
-
-	Connection con;  /// Our database connection
 
 	static public int MAX_NAME_LENGTH = 32;
 	static public String URL = "localhost";
@@ -83,220 +78,142 @@ public class MySQLSerializer implements BCSStorageController{
 
 	String mysql_create_database; 
 
-	final String mysql_shopsign_table_exists = "desc " + SHOPSIGN_TABLE;
-	final String mysql_shopchest_table_exists = "desc " + SHOPCHEST_TABLE;
-	final String mysql_shoppermissions_table_exists = "desc " + SHOPPERMISSION_TABLE;
-	final String mysql_transaction_table_exists = "desc " + TRANSACTION_TABLE;
-
-
-	final String mysql_create_pk_table = "CREATE TABLE IF NOT EXISTS " + SHOPSIGN_TABLE +" ("+
+	String mysql_create_pk_table = "CREATE TABLE IF NOT EXISTS " + SHOPSIGN_TABLE +" ("+
 			PLAYER + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
 			WORLD + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
 			X + " INTEGER ," +
 			Y + " INTEGER ," +
 			Z + " INTEGER ," +
-			"PRIMARY KEY (" + WORLD + "," + X +", " + Y + "," + Z + ")) " +
-			"DEFAULT CHARACTER SET = utf8 "+
-			"COLLATE = utf8_general_ci";
+			"PRIMARY KEY (" + WORLD + "," + X +", " + Y + "," + Z + ")) ";
 
-	final String mysql_create_transaction_table = "CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE +" ("+
-			ID + " INTEGER NOT NULL AUTO_INCREMENT," +
-			P1 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
-			P2 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
-			BUY_OR_SELL + " TINYINT NOT NULL ,"+
-			ITEMID + " INTEGER ," +
-			QUANTITY + " INTEGER ," +
-			PRICE + " DOUBLE ," +
-			DATE + " DATETIME," +
-			"PRIMARY KEY (" + ID + "), INDEX USING BTREE (" + P1 +"),INDEX USING BTREE (" + P2 +"))"+
-			"DEFAULT CHARACTER SET = utf8 "+
-			"COLLATE = utf8_general_ci";
+	String mysql_create_transaction_table;
 
-	final String mysql_create_total_table = "CREATE TABLE IF NOT EXISTS " + SHOPCHEST_TABLE +" ("+
+	String mysql_create_total_table = "CREATE TABLE IF NOT EXISTS " + SHOPCHEST_TABLE +" ("+
 			PLAYER + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
 			WORLD + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
 			X + " INTEGER ," +
 			Y + " INTEGER ," +
 			Z + " INTEGER ," +
 			ITEMIDS + " VARCHAR(1024) NOT NULL ,"+
-			"PRIMARY KEY (" + WORLD + "," + X +", " + Y + "," + Z + ")) " +
-			"DEFAULT CHARACTER SET = utf8 "+
-			"COLLATE = utf8_general_ci";
+			"PRIMARY KEY (" + WORLD + "," + X +", " + Y + "," + Z + ")) ";
 
-	final String mysql_create_permissions_table = "CREATE TABLE IF NOT EXISTS " + SHOPPERMISSION_TABLE +" ("+
+	String mysql_create_permissions_table = "CREATE TABLE IF NOT EXISTS " + SHOPPERMISSION_TABLE +" ("+
 			PLAYER + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
 			P2 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
-			"PRIMARY KEY (" + PLAYER + "," + P2 + ")) " +
-			"DEFAULT CHARACTER SET = utf8 "+
-			"COLLATE = utf8_general_ci";
+			"PRIMARY KEY (" + PLAYER + "," + P2 + ")) ";
 
 	final String mysql_getall_signs = "select " +PLAYER+"," + WORLD +"," + X+","+Y+","+Z +" from " + SHOPSIGN_TABLE ;
 	final String mysql_getall_chests = "select " +PLAYER+"," + WORLD +"," + X+","+Y+","+Z +"," + ITEMIDS + " from " + SHOPCHEST_TABLE ;
 	final String mysql_getall_shopassociates = "select " +PLAYER+"," + P2+ " from " + SHOPPERMISSION_TABLE ;
 
-	final String mysql_bulk_insert_shopchest = "INSERT INTO "+SHOPCHEST_TABLE+" VALUES %s ON DUPLICATE KEY UPDATE " +
+	String mysql_bulk_insert_shopchest = "INSERT INTO "+SHOPCHEST_TABLE+" VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE " +
 			PLAYER + " = VALUES(" + PLAYER + ")" +"," + ITEMIDS +"= VALUES(" + ITEMIDS + ")";
 
-	final String mysql_bulk_insert_shopsign = "INSERT INTO "+SHOPSIGN_TABLE+" VALUES %s ON DUPLICATE KEY UPDATE " +
+	String mysql_bulk_insert_shopsign = "INSERT INTO "+SHOPSIGN_TABLE+" VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE " +
 			PLAYER + " = VALUES(" + PLAYER + ")";
 
-	final String mysql_bulk_insert_shopassociates = "INSERT IGNORE INTO "+SHOPPERMISSION_TABLE+" VALUES %s ";
+	String mysql_bulk_insert_shopassociates = "INSERT IGNORE INTO "+SHOPPERMISSION_TABLE+" VALUES (?,?) ";
 
-	final String mysql_bulk_insert_transactions = "INSERT INTO "+TRANSACTION_TABLE+" VALUES %s " ;
+	final String mysql_bulk_insert_transactions = "INSERT INTO "+TRANSACTION_TABLE+" VALUES (?,?,?,?,?,?,?,?) " ;
 
-	final String mysql_delete_sign = "delete from " + SHOPSIGN_TABLE+" where " + WORLD +"='%s' and " + X + "=%s and "+Y+"=%s and " + Z +"=%s LIMIT 1";
-	final String mysql_delete_chest = "delete from " + SHOPCHEST_TABLE+" where " + WORLD +"='%s' and " + X + "=%s and "+Y+"=%s and " + Z +"=%s LIMIT 1";
-	final String mysql_delete_associate = "delete from " + SHOPPERMISSION_TABLE+" where " + PLAYER+"='%s' and " + P2 + "='%s' LIMIT 1";
+	final String mysql_delete_sign = "delete from " + SHOPSIGN_TABLE+" where " + WORLD +"=? and " + X + "=? and "+Y+"=? and " + Z +"=? ";
+	final String mysql_delete_chest = "delete from " + SHOPCHEST_TABLE+" where " + WORLD +"=? and " + X + "=? and "+Y+"=? and " + Z +"=? ";
+	final String mysql_delete_associate = "delete from " + SHOPPERMISSION_TABLE+" where " + PLAYER+"=? and " + P2 + "=? ";
 
-	final String get_player_transactions = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P2+"='%s'";
-	final String get_player_transactions_ndays = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P2+"='%s' AND "+DATE+
-			" >= (CURDATE() - INTERVAL %s DAY )";
+	final String get_player_transactions = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P2+"=?";
+	String get_player_transactions_ndays = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P2+"=? AND "+DATE+
+			" >= (CURDATE() - INTERVAL ? DAY )";
 
-	final String get_shop_transactions = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P1+"='%s'";
-	final String get_shop_transactions_ndays = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P1+"='%s' AND "+DATE+
-			" >= (CURDATE() - INTERVAL %s DAY )";
+	final String get_shop_transactions = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P1+"=?";
+	String get_shop_transactions_ndays = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P1+"=? AND "+DATE+
+			" >= (CURDATE() - INTERVAL ? DAY )";
 
-	public MySQLSerializer(){}
-
-	public boolean initted(){
-		return con != null;
-	}
 	public boolean init(){
-		mysql_create_database = "CREATE DATABASE IF NOT EXISTS " + DB;
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			if (DEBUG) System.out.println("Got Driver");
-		} catch (ClassNotFoundException e1) {
-			System.err.println("Failed getting driver");
-			e1.printStackTrace();
-			return false;
+		super.init();
+		switch(TYPE){
+		case MYSQL:
+			mysql_create_transaction_table = "CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE +" ("+
+					ID + " INTEGER NOT NULL AUTO_INCREMENT," +
+					P1 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					P2 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					BUY_OR_SELL + " TINYINT NOT NULL ,"+
+					ITEMID + " INTEGER ," +
+					QUANTITY + " INTEGER ," +
+					PRICE + " DOUBLE ," +
+					DATE + " DATETIME," +
+					"PRIMARY KEY (" + ID + "), INDEX USING BTREE (" + P1 +"),INDEX USING BTREE (" + P2 +"))";
+			break;
+		case SQLITE:
+			mysql_create_pk_table = "CREATE TABLE IF NOT EXISTS " + SHOPSIGN_TABLE +" ("+
+					PLAYER + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					WORLD + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					X + " INTEGER ," +
+					Y + " INTEGER ," +
+					Z + " INTEGER ," +
+					"PRIMARY KEY (" + WORLD + "," + X +", " + Y + "," + Z + ")) ";
+
+			mysql_create_transaction_table = "CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE +" ("+
+					ID + " INTEGER NOT NULL ," +
+					P1 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					P2 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					BUY_OR_SELL + " TINYINT NOT NULL ,"+
+					ITEMID + " INTEGER ," +
+					QUANTITY + " INTEGER ," +
+					PRICE + " DOUBLE ," +
+					DATE + " DATETIME," +
+					"PRIMARY KEY (" + ID + "))";
+			//							" INDEX USING BTREE (" + P1 +"),INDEX USING BTREE (" + P2 +"))"+
+
+			mysql_create_total_table = "CREATE TABLE IF NOT EXISTS " + SHOPCHEST_TABLE +" ("+
+					PLAYER + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					WORLD + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					X + " INTEGER ," +
+					Y + " INTEGER ," +
+					Z + " INTEGER ," +
+					ITEMIDS + " VARCHAR(1024) NOT NULL ,"+
+					"PRIMARY KEY (" + WORLD + "," + X +", " + Y + "," + Z + ")) ";
+
+			mysql_create_permissions_table = "CREATE TABLE IF NOT EXISTS " + SHOPPERMISSION_TABLE +" ("+
+					PLAYER + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					P2 + " VARCHAR(" + MAX_NAME_LENGTH +") NOT NULL ,"+
+					"PRIMARY KEY (" + PLAYER + "," + P2 + ")) ";
+
+			mysql_bulk_insert_shopchest = "INSERT OR REPLACE INTO "+SHOPCHEST_TABLE+" VALUES (?,?,?,?,?,?)";
+
+			mysql_bulk_insert_shopsign = "INSERT OR REPLACE INTO "+SHOPSIGN_TABLE+" VALUES (?,?,?,?,?)";
+
+			mysql_bulk_insert_shopassociates = "INSERT OR IGNORE INTO "+SHOPPERMISSION_TABLE+" VALUES (?,?) ";
+			get_player_transactions_ndays = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P2+"=? AND "+DATE+
+					" >= (julianday(date('now'))- ?)";
+
+			get_shop_transactions_ndays = "SELECT * FROM "+TRANSACTION_TABLE+" WHERE "+P1+"=? AND "+DATE+
+					" >=  (julianday(date('now'))- ?)";
+
+
+			break;
 		}
-
-		String strStmt = mysql_create_database;
 		try {
-			con = DriverManager.getConnection("jdbc:mysql://"+URL+":" + PORT, USERNAME,PASSWORD);
-			Statement st = con.createStatement();
-			st.executeUpdate(strStmt);
-			if (DEBUG) System.out.println("Creating db");
-		} catch (SQLException e) {
-			System.err.println("Failed creating db: "  + strStmt);
-			e.printStackTrace();
-			return false;
-		}
-		try {
-			con = DriverManager.getConnection("jdbc:mysql://"+URL+":" + PORT +"/" + DB, USERNAME,PASSWORD);
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-			return false;
-		}
+			Connection con = getConnection();  /// Our database connection
 
-		createTable(mysql_shopsign_table_exists, mysql_create_pk_table,null);
-		createTable(mysql_shopchest_table_exists, mysql_create_total_table,null);
-		createTable(mysql_shoppermissions_table_exists, mysql_create_permissions_table,null);
-		createTable(mysql_transaction_table_exists, mysql_create_transaction_table,null);
-
-		try {
-			con.setAutoCommit(false);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return true;
-	}
-
-	private boolean createTable(String sql_table_exists,
-			String sql_create_table,String sql_create_index) {
-		String strStmt;
-		strStmt = sql_table_exists;
-		/// Check to see if our table exists;
-		boolean table_exists = false;
-		try {
-			Statement st = con.createStatement();
-			st.executeUpdate(strStmt);
-			if (DEBUG) System.out.println("table exists");
-			table_exists = true;
-		} catch (SQLException e) {
-			if (DEBUG) System.out.println("table does not exist");
-		}
-		/// If the table exists nothing left to do
-		if (table_exists)
-			return true;
-		/// Create our table and index
-		strStmt = sql_create_table;
-		Statement st = null;
-		int result =0;
-		try {
-			st = con.createStatement();
-
-			result = st.executeUpdate(strStmt);
-			if (DEBUG) System.out.println("Created Table with stmt=" + strStmt);
-
-			if (sql_create_index != null){
-				try{
-					st = con.createStatement();
-					st.executeUpdate(sql_create_index);
-					if (DEBUG) System.out.println("Created Index");				
-				} catch (Exception e){
-					if (DEBUG) System.err.println("Failed in creating Index");
-					return false;
-				}					
-			}
-		} catch (Exception e) {
-			if (DEBUG) System.err.println("Failed in creating Table " +
-					strStmt + "   result=" + result);
+			createTable(con,SHOPSIGN_TABLE, mysql_create_pk_table);
+			createTable(con,SHOPCHEST_TABLE, mysql_create_total_table);
+			createTable(con,SHOPPERMISSION_TABLE, mysql_create_permissions_table);
+			createTable(con,TRANSACTION_TABLE, mysql_create_transaction_table);
+			closeConnection(con);
+		} catch (Exception e){
 			e.printStackTrace();
 			return false;
 		}
 
 		return true;
 	}
-
-	private ResultSet executeQuery(String strRawStmt, Object... varArgs){
-		StringBuilder buf = new StringBuilder();
-		Formatter form = new Formatter(buf);
-		form.format(strRawStmt, varArgs);
-
-		try {
-			Statement st = con.createStatement();
-			if (DEBUG)System.out.println("Executing   =" + buf.toString());
-			st.executeQuery(buf.toString());
-			return st.getResultSet();
-		} catch (SQLException e) {
-			System.err.println("Couldnt execute query "  + buf.toString());
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private int executeUpdate(String strRawStmt, Object... varArgs){
-		StringBuilder buf = new StringBuilder();
-		Formatter form = new Formatter(buf);
-		try{
-			form.format(strRawStmt, varArgs);
-		} catch (MissingFormatArgumentException e){
-			System.err.println("Failed with stmt= " + strRawStmt + "   varArgs=" + varArgs);
-			e.printStackTrace();
-		}
-
-		try {
-			Statement st = con.createStatement();
-			if (DEBUG) System.out.println("Executing   =" + buf.toString());
-			return st.executeUpdate(buf.toString());
-		} catch (SQLException e) {
-			System.err.println("Couldnt execute update "  + buf.toString());
-			e.printStackTrace();
-			return -1;
-		}
-	}
-
 
 	private void saveShops(){
 		Map<World,Map<String, Shop>> allshops = WorldShop.getAllShops();
 		if (allshops == null || allshops.size() <= 0)
 			return;
-		StringBuilder sb = new StringBuilder();
-		boolean first = true;
-		boolean found_associate= false;
+
+		List<List<Object>> batch = new ArrayList<List<Object>>();
 		for (World w: allshops.keySet()){
 			Map<String,Shop> shops = allshops.get(w);
 			for (String player : shops.keySet()){
@@ -304,24 +221,23 @@ public class MySQLSerializer implements BCSStorageController{
 				if (associates == null)
 					continue;
 				for (String associate : associates){
-					found_associate = true;
-					if (!first)
-						sb.append(",");
-					sb.append( "('" + player+"','" + associate + "')");
-					first = false;
+					batch.add(Arrays.asList(new Object[]{player,associate}));
 				}
 			}			
 		}
-		if (found_associate){
-			executeUpdate(mysql_bulk_insert_shopassociates, sb.toString());
-			commit();
+
+		try {
+			executeBatch(mysql_bulk_insert_shopassociates, batch);
+		} catch (Exception e){
+			e.printStackTrace();
 		}
 	}
 
 	public void loadShops(){
-		ResultSet rs = executeQuery(mysql_getall_shopassociates);
-		if (rs == null) return;
+		RSCon rscon = executeQuery(mysql_getall_shopassociates);
+		if (rscon == null || rscon.rs == null) return;
 		try{
+			ResultSet rs = rscon.rs;
 			Map<String,Set<String>> shopsWithAssociates  = new HashMap<String, Set<String>>();
 			while (rs.next()){
 				String player = rs.getString(PLAYER);
@@ -359,8 +275,7 @@ public class MySQLSerializer implements BCSStorageController{
 
 	private void saveSigns(){
 		Map<World, Map<String, ShopSign>> allsigns = WorldShop.getAllSigns();
-		StringBuilder sb = new StringBuilder();
-		boolean first =true;
+		List<List<Object>> batch = new ArrayList<List<Object>>();
 		for (World w: allsigns.keySet()){
 			Map<String, ShopSign> map = allsigns.get(w);
 			if (map == null || map.isEmpty())
@@ -371,14 +286,16 @@ public class MySQLSerializer implements BCSStorageController{
 				int x= ss.getX();
 				int y = ss.getY();
 				int z = ss.getZ();
-				if (!first) sb.append(",");
-				sb.append( "('" + player + "','" + world+ "'," + x + "," + y + "," + z+ ")");
-				first = false;
+
+				batch.add(Arrays.asList(new Object[]{player,world,x,y,z}));
 			}			
 		}
-		if (!first){
-			executeUpdate(mysql_bulk_insert_shopsign, sb.toString());
-			commit();
+
+		try {
+			executeBatch(mysql_bulk_insert_shopsign, batch);
+		} catch (Exception e){
+			e.printStackTrace();
+			return ;
 		}
 	}
 
@@ -386,8 +303,8 @@ public class MySQLSerializer implements BCSStorageController{
 		Map<World, Map<String, ShopChest>> allchests = WorldShop.getAllChests();
 		if (allchests == null || allchests.isEmpty())
 			return;
-		StringBuilder sb = new StringBuilder();
-		boolean first =true;
+		List<List<Object>> batch = new ArrayList<List<Object>>();
+
 		for (World w: allchests.keySet()){
 			Map<String, ShopChest> map = allchests.get(w);
 			if (map == null || map.isEmpty())
@@ -406,43 +323,26 @@ public class MySQLSerializer implements BCSStorageController{
 					sb2.append( i );
 					first2 = false;
 				}
-				if (!first) sb.append(",");
-				sb.append( "('" + player + "','" + world+ "'," + x + "," + y + "," + z+ ",'" + sb2.toString() + "')");
-				first = false;
+				batch.add(Arrays.asList(new Object[]{player,world,x,y,z,sb2.toString()}));
 			}
 		}
-		if (!first){
-			executeUpdate(mysql_bulk_insert_shopchest, sb.toString());
-			commit();
+		try {
+			executeBatch(mysql_bulk_insert_shopchest, batch);
+		} catch (Exception e){
+			e.printStackTrace();
+			return ;
 		}
 	}
 
-	private boolean commit(){
-		try {
-			con.commit();
-			return true;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-	//	private class StringLocation{
-	//		String worldname;
-	//		int x,y,z;
-	//		StringLocation(Location l){
-	//			this.worldname = l.getWorld().getName();x = l.getBlockX(); y = l.getBlockY(); z= l.getBlockZ();
-	//		}
-	//		StringLocation(String worldname, int x, int y, int z){
-	//			this.worldname = worldname; this.x = x; this.y = y; this.z = z;
-	//		}
-	//	}
 	@SuppressWarnings("unused")
 	public void loadChests(){
-		ResultSet rs = executeQuery(mysql_getall_chests);
-		if (rs == null) return;
+		RSCon rscon = executeQuery(mysql_getall_chests);
+		if (rscon == null || rscon.rs == null) return;
 		List<Location> bad_locs = new LinkedList<Location>();
 		HashMap<String, ShopChest> map = new HashMap<String, ShopChest>();
 		try{
+			ResultSet rs = rscon.rs;
+
 			while (rs.next()){
 				try{
 					String player = rs.getString(PLAYER);
@@ -458,7 +358,7 @@ public class MySQLSerializer implements BCSStorageController{
 					}
 					Block b = world.getBlockAt(x, y, z);
 					final Material mat = b.getType();
-//										System.out.println("" + worldname + ":" + x + ":" + y + ":" + z);
+					//										System.out.println("" + worldname + ":" + x + ":" + y + ":" + z);
 
 					if (!(mat.equals(Material.CHEST) )){
 						if (Defaults.ERROR_LVL > 1)
@@ -525,11 +425,13 @@ public class MySQLSerializer implements BCSStorageController{
 
 
 	public void loadSigns(){
-		ResultSet rs = executeQuery(mysql_getall_signs);
-		if (rs == null) return;
+		RSCon rscon = executeQuery(mysql_getall_signs);
+		if (rscon == null || rscon.rs == null) return;
+
 		List<Location> bad_locs = new LinkedList<Location>();
 		List<ShopSign> list = new ArrayList<ShopSign>();
 		try{
+			ResultSet rs = rscon.rs;
 			while (rs.next()){
 				String worldname = null;
 				Integer x = null,y = null,z = null;
@@ -568,7 +470,7 @@ public class MySQLSerializer implements BCSStorageController{
 						continue;
 					}
 					ShopSign ss = new ShopSign(owner,sign,sv);
-//					System.out.println("" + worldname + ":" + x + ":" + y + ":" + z + "     " + ss + "    owener=" + owner + "   sv=" +sv);
+					//					System.out.println("" + worldname + ":" + x + ":" + y + ":" + z + "     " + ss + "    owener=" + owner + "   sv=" +sv);
 
 					list.add(ss);
 				} catch (Exception error){
@@ -584,7 +486,7 @@ public class MySQLSerializer implements BCSStorageController{
 		}
 		for (ShopSign ss: list){
 			try{
-//				System.out.println("ss = " + ss);
+				//				System.out.println("ss = " + ss);
 				WorldShop.addShopSign(ss);
 			} catch (Exception e){
 				Log.err("Error adding shopsign " + ss +" to the shops ");
@@ -605,7 +507,6 @@ public class MySQLSerializer implements BCSStorageController{
 		for (Location l : locs){
 			deleteChestLocation(l.getWorld(), (int) l.getX(), (int) l.getY(), (int) l.getZ());
 		}
-		commit();
 	}
 
 	private void deleteSignLocations(List<Location> locs){
@@ -613,12 +514,10 @@ public class MySQLSerializer implements BCSStorageController{
 		for (Location l : locs){
 			deleteSignLocation(l.getWorld(), (int) l.getX(), (int) l.getY(), (int) l.getZ());
 		}
-		commit();
 	}
 
 	public void deleteShopSign(ShopSign ss){
 		deleteSignLocation(ss.getWorld(),ss.getX(),ss.getY(),ss.getZ());
-		commit();
 	}
 
 	private void deleteSignLocation(World world, int x, int y, int z) {
@@ -635,11 +534,9 @@ public class MySQLSerializer implements BCSStorageController{
 
 	public void deleteShopChest(ShopChest ss){
 		executeUpdate(mysql_delete_chest, ss.getWorld().getName(),ss.getX(),ss.getY(),ss.getZ());		
-		commit();
 	}
 	public void deleteChest(Chest ss){
 		executeUpdate(mysql_delete_chest, ss.getWorld().getName(),ss.getX(),ss.getY(),ss.getZ());		
-		commit();
 	}
 
 	public void saveAll() {
@@ -658,30 +555,32 @@ public class MySQLSerializer implements BCSStorageController{
 
 	public void deleteAssociate(String p1, String p2) {
 		executeUpdate(mysql_delete_associate, p1, p2);
-		commit();
 	}
 
 	public void saveTransactions(Collection<Transaction> trs) {
 		if (trs.isEmpty()){
 			return;
 		}
-		StringBuilder sb = new StringBuilder();
-		boolean first =true;
+
+		List<List<Object>> batch = new ArrayList<List<Object>>();
 		for (Transaction tr : trs){
-			if (!first) sb.append(",");
 			int b = tr.buying ? 1 : 0;
 			Timestamp ts = new Timestamp(tr.cal.getTimeInMillis());
-			sb.append( "(NULL,'"+ tr.p1 +"','"+tr.p2  +"',"+b+"," + tr.itemid +"," + tr.quantity +"," + tr.price +",'" + ts +"')");
-			first = false;
+			batch.add(Arrays.asList(new Object[]{null,tr.p1,tr.p2,b,tr.itemid,tr.quantity,tr.price,ts}));
 		}
 
-		executeUpdate(mysql_bulk_insert_transactions, sb.toString());
-		commit();
+
+		try {
+			executeBatch(mysql_bulk_insert_transactions, batch);
+		} catch (Exception e){
+			e.printStackTrace();
+			return ;
+		}
 	}
 
 
 	public List<Transaction> getPlayerTransactions(String name, Integer ndays) {
-		ResultSet rs;
+		RSCon rs;
 		BattleShops.getMyLogger().saveAll(); /// a kludge.. i'm using caching.. but if this happens I need to save
 		if (ndays == null){
 			ndays = 1;
@@ -692,7 +591,7 @@ public class MySQLSerializer implements BCSStorageController{
 
 
 	public List<Transaction> getShopTransactions(String name, Integer ndays) {
-		ResultSet rs;
+		RSCon rs;
 		BattleShops.getMyLogger().saveAll(); /// a kludge.. i'm using caching.. but if this happens I need to save
 		if (ndays == null){
 			ndays = 1;
@@ -701,12 +600,14 @@ public class MySQLSerializer implements BCSStorageController{
 		return parseTransactionResults(rs);
 	}
 
-	private List<Transaction> parseTransactionResults(ResultSet rs){
+	private List<Transaction> parseTransactionResults(RSCon rscon){
 		List<Transaction> trs = new ArrayList<Transaction>();
 
-		if (rs == null) 
+		if (rscon == null || rscon.rs == null) 
 			return trs;
+
 		try{
+			ResultSet rs = rscon.rs;
 			while (rs.next()){
 				String p1 = rs.getString(P1);
 				String p2 = rs.getString(P2);

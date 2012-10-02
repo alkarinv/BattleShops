@@ -32,7 +32,6 @@ public class BCSBlockListener implements Listener {
 			Player player = event.getPlayer();
 			Block block = event.getBlock();
 			if (WorldShop.hasShopSignAt(block.getLocation()) ){
-
 				if (PermissionController.hasPermissions(player, block)){
 					ShopSign ss = WorldShop.getShopSign(block.getLocation());
 					LinkController.breakShopSign((Sign) event.getBlock().getState());
@@ -42,7 +41,6 @@ public class BCSBlockListener implements Listener {
 				} else {
 					event.setCancelled(true); /// Keep the sign around so that text remains w/o logging out
 				}
-
 			}
 		} else if (mat.equals(Material.CHEST)){
 			Player player = event.getPlayer();

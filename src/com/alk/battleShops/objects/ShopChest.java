@@ -214,8 +214,13 @@ public class ShopChest{
 //		return getNeighborChest(mc) != null;
 	}	
 	public Chest getNeighborChest() {return getNeighborChest(mc);}
+
 	public static Chest getNeighborChest(final Chest chest){
-		final Block b = chest.getBlock();
+		return getNeighborChest(chest.getLocation());
+	}
+
+	public static Chest getNeighborChest(final Location loc){
+		final Block b = loc.getBlock();
 		if (b.getRelative(BlockFace.NORTH).getType() == Material.CHEST)
 			return (Chest) b.getRelative(BlockFace.NORTH).getState();
 		else if (b.getRelative(BlockFace.SOUTH).getType() == Material.CHEST)

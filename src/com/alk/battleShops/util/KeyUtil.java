@@ -16,24 +16,24 @@ import com.alk.battleShops.objects.ShopSign;
 public class KeyUtil {
 
 	public static String getStringLoc(Block block) {
-		return block.getWorld().getName() + ":" + block.getX() +":" + block.getY() + ":" + block.getZ();
+		return getStringLoc(block.getLocation());
 	}
 	public static String getStringLoc(Sign sign) {
-		return sign.getWorld().getName() + ":" + sign.getX() +":" + sign.getY() + ":" + sign.getZ();
+		return getStringLoc(sign.getLocation());
 	}
 
 	public static String getStringLoc(ShopChest chest) {
-		return chest.getWorld().getName() + ":" + chest.getX() +":" + chest.getY() +":" + chest.getZ() ;
+		return getStringLoc(chest.getLocation());
 	}
 
 	public static String getStringLoc(ShopSign sign) {
-		return sign.getWorld().getName() + ":" + sign.getX() +":" + sign.getY() + ":" + sign.getZ();
+		return getStringLoc(sign.getLocation());
 	}
 
 	public static String getStringLoc(Chest chest) {
-		return chest.getWorld().getName() + ":" + chest.getX() +":" + chest.getY() + ":" + chest.getZ();
+		return getStringLoc(chest.getLocation());
 	}
 	public static String getStringLoc(Location location) {
-		return location.getWorld().getName() + ":" + location.getX() +":" + location.getY() + ":" + location.getZ();
+		return location.getWorld().getName() + ":" + location.getBlockX() +":" + location.getBlockY() + ":" + location.getBlockZ();
 	}
 }

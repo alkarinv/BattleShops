@@ -1,6 +1,7 @@
 package com.alk.battleShops.controllers;
 
 import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -45,7 +46,8 @@ public class PermissionController {
 		//		System.out.println("Checking hasPermissions   hasPermission = "  + worldGuard.canBuild(player, block));
 		if (worldGuard != null) 
 			return worldGuard.canBuild(player, block) || PermissionController.isAdmin(player);
-
+		if (player.hasPermission("shop.create"))
+			return true;
 		return PermissionController.isAdmin(player);		
 	}
 
@@ -56,7 +58,7 @@ public class PermissionController {
 			return false;
 		return PermissionController.isAdmin(p);
 	}
-	public static boolean isAdmin(Player p) {
+	public static boolean isAdmin(CommandSender p) {
 		return p.hasPermission("shop.admin") || p.isOp();
 	}
 

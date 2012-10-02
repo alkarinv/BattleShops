@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import com.alk.battleShops.BattleShops;
 import com.alk.battleShops.Defaults;
+import com.alk.battleShops.controllers.MessageController;
 import com.alk.battleShops.controllers.PermissionController;
 import com.alk.battleShops.util.KeyUtil;
 import com.alk.battleShops.util.Util;
@@ -29,12 +30,9 @@ public class WorldShop {
 	private static Map<World, Map<String, Shop >> allshops = new HashMap<World, Map<String, Shop>>();
 	private static Map<World, Map<String, ShopSign >> shopsigns = new HashMap<World, Map<String, ShopSign>>();
 	private static Map<World, Map<String, ShopChest >> shopchests = new HashMap<World, Map<String, ShopChest>>();
-//	private static Map<String, Shop> shops = new HashMap<String, Shop>(); // Maps a ShopOwner to the Shop
-//	private static Map<String, ShopSign> shopsigns = new HashMap<String, ShopSign>(); // Maps a xyz to a shopsign
-//	private static Map<String, ShopChest> shopchests = new HashMap<String, ShopChest>(); // Maps a xyz to a chest
 	private static Map<String, PlayerActivity> playeractivity =
-		new HashMap<String, PlayerActivity>(); // Is this user and shop active
-	
+			new HashMap<String, PlayerActivity>(); // Is this user and shop active
+
 
 	public static Map<World, Map<String, Shop>> getAllShops() {return allshops;}
 	public static Map<World, Map<String, ShopSign>> getAllSigns() {return shopsigns;}
@@ -59,9 +57,9 @@ public class WorldShop {
 		if (soplayer == null || PermissionController.isAdmin(so.getName()))
 			return -1;
 		if (chestCount > 0){
-			soplayer.sendMessage("You have now set up a shop of " + sign.getCommonName() + " to " + chestCount + " " + Util.getChestOrChests(chestCount));
+			soplayer.sendMessage(MessageController.getMessage("setup_shop",sign.getCommonName(),chestCount,Util.getChestOrChests(chestCount)));
 		} else {
-			soplayer.sendMessage("You have set up a shop of " + sign.getCommonName() + " but you still need to link it to a chest");
+			soplayer.sendMessage(MessageController.getMessage("setup_shop_no_chests",sign.getCommonName()));
 		}
 		return chestCount;
 	}
@@ -73,7 +71,7 @@ public class WorldShop {
 	private static Map<String, ShopChest> getChests(World w) {
 		return shopchests.get(Defaults.MULTIWORLD ? null : w);
 	}
-	
+
 	private static Map<String, Shop> getShops(World w) {
 		return allshops.get(Defaults.MULTIWORLD ? null : w);
 	}
@@ -150,28 +148,29 @@ public class WorldShop {
 			return null;
 		return signs.get(KeyUtil.getStringLoc(loc));
 	}
-	
-		
+
 	public static boolean hasShopChestAt(Chest chest){return getShopChest(chest) == null ? false : true;}
 
 	public static ShopChest getShopChest(Chest chest) {
-		Map<String, ShopChest> chests = getChests(chest.getWorld());
+		return getShopChest(chest.getLocation());
+	}
+
+	public static ShopChest getShopChest(Location location) {
+		Map<String, ShopChest> chests = getChests(location.getWorld());
 		if (chests == null || chests.isEmpty())
 			return null;
-		String loc = KeyUtil.getStringLoc(chest);
-
+		String loc = KeyUtil.getStringLoc(location);
 		/// do we have a chest here
 		ShopChest sc = chests.get(loc);
 		/// if its null, we might have a chest nearby, try and return that
 		if (sc == null){
-			Chest neighbor = ShopChest.getNeighborChest(chest);
+			Chest neighbor = ShopChest.getNeighborChest(location);
 			if (neighbor == null) return null;
 			loc = KeyUtil.getStringLoc(neighbor);
 			sc = chests.get(loc);			
 		}
 		return sc;
 	}
-
 
 	public static Shop addShop(World w, ShopOwner owner) {
 		return loadShop(w, owner);
@@ -205,20 +204,20 @@ public class WorldShop {
 		}
 		BattleShops.getStorageController().deleteShopSign(ss);
 	}
-	
+
 
 	public static void printShops() {
 		System.out.println("@@########");
-//		for ( ShopSign ss : shopsigns.values()){
-//			System.out.println(ss);
-//		}
-//		System.out.println("----------");
-//		for ( ShopChest chest : shopchests.values()){
-//			System.out.println(chest);
-//		}
+		//		for ( ShopSign ss : shopsigns.values()){
+		//			System.out.println(ss);
+		//		}
+		//		System.out.println("----------");
+		//		for ( ShopChest chest : shopchests.values()){
+		//			System.out.println(chest);
+		//		}
 		System.out.println("@@########");
 	}
-	
+
 	public static Shop getShop(Player player){
 		return loadShop(player.getWorld(), new ShopOwner(player));
 	}
@@ -231,7 +230,7 @@ public class WorldShop {
 	 */
 	public static void updateAffectedSigns(World w, ShopOwner so, Set<Integer> ids) {
 		Shop shop = getShop(w, so);
-		if (shop != null && ids != null)
+		if (shop != null && ids != null && !ids.isEmpty())
 			shop.updateSignsByItemId(ids);
 	}
 
@@ -241,7 +240,7 @@ public class WorldShop {
 		if (shop != null)
 			shop.updateSignsByItemId(ss.getItemId());
 	}
-	
+
 	public static void updateAllSigns() {
 		for (World w: shopsigns.keySet()){
 			updateAllSigns(w);
@@ -259,7 +258,7 @@ public class WorldShop {
 			updateAffectedSigns(w, shop.getOwner(), ids);
 		}
 	}
-	
+
 	public static PlayerActivity getPlayerActivity(String name){
 		PlayerActivity pa = playeractivity.get(name);
 		if (pa == null){
@@ -267,7 +266,7 @@ public class WorldShop {
 			playeractivity.put(name, pa);
 		}
 		return pa;
-		
+
 	}
 	public static void playerShopTransaction(ShopOwner owner) {
 		PlayerActivity pa = getPlayerActivity(owner.getName());

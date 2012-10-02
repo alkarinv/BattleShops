@@ -5,6 +5,7 @@ import java.util.Formatter;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -37,6 +38,7 @@ public class MessageController {
 			Formatter form = new Formatter(buf);
 
 			form.format(msg, varArgs);
+			form.close();
 			return colorChat(buf.toString());
 		} catch(Exception e){
 			System.err.println("Error getting message " + prefix + "." + node);
@@ -52,6 +54,7 @@ public class MessageController {
 		Formatter form = new Formatter(buf);
 		try{
 			form.format(msg, varArgs);
+			form.close();
 		} catch(Exception e){
 			System.err.println("Error getting message " + prefix + "." + node);
 			for (Object o: varArgs){ System.err.println("argument=" + o);}
@@ -104,5 +107,9 @@ public class MessageController {
 
 	public static String getBoughtOrSold(boolean buying) {
 		return buying ? "bought" : "sold";
+	}
+
+	public FileConfiguration getConfig() {
+		return config;
 	}
 }

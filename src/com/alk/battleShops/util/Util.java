@@ -3,6 +3,8 @@ package com.alk.battleShops.util;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
+import com.alk.battleShops.controllers.MessageController;
+
 /**
  * 
  * @author alkarin
@@ -64,15 +66,15 @@ public class Util {
 	}
 
 	public static String getHasOrHave(int itemCount) {
-		return itemCount == 1 ? "has" : "have";
+		return itemCount == 1 ? MessageController.getMessage("has") : MessageController.getMessage("have");
 	}
 
 	public static String getChestOrChests(int itemCount) {
-		return itemCount == 1 ? "chest" : "chests";
+		return itemCount == 1 ? MessageController.getMessage("chest") : MessageController.getMessage("chests");
 	}
 
 	public static String getSignOrSigns(int itemCount) {
-		return itemCount == 1 ? "sign" : "signs";
+		return itemCount == 1 ? MessageController.getMessage("sign") : MessageController.getMessage("signs");
 	}
 
 	public static String removeColor(String string) {

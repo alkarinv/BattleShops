@@ -1,5 +1,6 @@
 package com.alk.battleShops.objects;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -126,7 +127,7 @@ public class ShopSign{
 		return (int) Math.floor(id/ITEMM);
 	}
 	public boolean isAdminShop() {
-		return owner.isAdmin();
+		return owner.isAdminShop();
 	}
 
 	public boolean validate() throws SignFormatException{
@@ -433,5 +434,8 @@ public class ShopSign{
 	public boolean isEmpty(){
 		if (isAdminShop()) return false;
 		return quantity > amount_in_chests;
+	}
+	public Location getLocation() {
+		return new Location(world,x,y,z);
 	}
 }

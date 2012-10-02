@@ -26,7 +26,6 @@ import com.alk.battleShops.objects.Shop;
 import com.alk.battleShops.objects.ShopSign;
 import com.alk.battleShops.objects.Transaction;
 import com.alk.battleShops.objects.WorldShop;
-import com.alk.battleShops.util.Util;
 
 /**
  * 
@@ -52,14 +51,14 @@ public class BCSExecutor  {
 		String commandStr = cmd.getName().toLowerCase();
 		for (String arg: args){
 			if (!arg.matches("[a-zA-Z0-9_]*")) {
-				player.sendMessage(ChatColor.YELLOW + "arguments can be only alphanumeric with underscores");
+				sender.sendMessage(ChatColor.YELLOW + "arguments can be only alphanumeric with underscores");
 				return true;
 			}
 			if (Defaults.DEBUG_TRACE) System.out.println("arguments =" + arg);
 		}
-		if (commandStr.equalsIgnoreCase("shopclean") && PermissionController.isAdmin(player)){
+		if (commandStr.equalsIgnoreCase("shopclean") && PermissionController.isAdmin(sender)){
 			int num = CleanSignController.clean(player.getLocation());
-			player.sendMessage("Cleaning " + num + " signs");
+			sender.sendMessage("Cleaning " + num + " signs");
 		}
 		if (commandStr.equalsIgnoreCase("shoptransactions")){
 			return shopTranscations(sender, player,args);
@@ -71,7 +70,7 @@ public class BCSExecutor  {
 		/// Shop command
 		if (commandStr.equalsIgnoreCase("shop")){
 			if (args.length == 0){
-				return showHelp(sender, player);
+				return showHelp(sender);
 			} else if (args.length ==1 && args[0].equalsIgnoreCase("list")){
 				listAssociates(sender, player);
 				return true;
@@ -98,7 +97,7 @@ public class BCSExecutor  {
 			if (args.length ==1){				
 			}
 			return false;
-		} else if (commandStr.equalsIgnoreCase("shopactive") && PermissionController.isAdmin(player)){
+		} else if (commandStr.equalsIgnoreCase("shopactive") && PermissionController.isAdmin(sender)){
 			if (args.length == 1){
 				return displayPlayerActivity(sender, player, args[0]);
 			} else {
@@ -109,6 +108,7 @@ public class BCSExecutor  {
 		}
 		return false;
 	}
+	
 	private void shopList(CommandSender sender, Player player, String[] args) {
 		if (args.length > 1){
 			
@@ -121,6 +121,7 @@ public class BCSExecutor  {
 			MessageController.sendMessage(sender, "&eSign = &6" + sign + " # chests =" + shop.getNumChestsAttachedToSign(sign));
 		}
 	}
+	
 	private String fromTo(boolean buying){
 		return buying ? "from" : "to";
 	}
@@ -130,19 +131,18 @@ public class BCSExecutor  {
 			try {ndays = Integer.valueOf(args[0]);} catch (Exception e){}
 		}
 
-		if (args.length > 0 && !PermissionController.isAdmin(p) && ndays == null){
-			p.sendMessage(Util.colorChat("&eYou don't have permissions to see other players transactions"));
-			p.sendMessage(Util.colorChat("&eType &6/ptr &e to see your own"));
+		if (args.length > 0 && !PermissionController.isAdmin(sender) && ndays == null){
+			sender.sendMessage(MessageController.getMessage("no_perms_see_other_player_transaction"));
 			return true;
 		}
 		String name = null;
 		if (args.length >0 && ndays == null){
 			name = args[0];
 			int ndays_index = 1;
-			if (args.length > 1 && name.equalsIgnoreCase("ADMIN")){
+			if (args.length > 1 && name.equalsIgnoreCase(Defaults.ADMIN_STR)){
 				if (args[1].equalsIgnoreCase("SHOP")){
 					ndays_index = 2;
-					name = "ADMIN SHOP";
+					name = Defaults.ADMIN_NAME;
 				}
 			}
 			try {ndays = Integer.valueOf(args[ndays_index]);} catch (Exception e){}
@@ -150,19 +150,19 @@ public class BCSExecutor  {
 			name = p.getName();
 		}
 		if (ndays != null && ndays > 7){
-			p.sendMessage(Util.colorChat("&eYou can't see more than 7 days worth of transactions"));
+			sender.sendMessage(MessageController.getMessage("too_many_days"));
 			return true;
 		}
 
 		List<Transaction> transactions = sc.getPlayerTransactions(name, ndays);
 		if (transactions.isEmpty()){
-			p.sendMessage(Util.colorChat("No Transactions Found"));
+			sender.sendMessage(MessageController.getMessage("no_transactions_found"));
 			return true;
 		}
 		double total_bought = 0;
 		double total_sold = 0;
 		for (Transaction tr : transactions){
-			p.sendMessage(MessageController.getMessageNP("transaction_list",
+			sender.sendMessage(MessageController.getMessageNP("transaction_list",
 					tr.getFormattedDate(), MessageController.getBoughtOrSold(tr.buying),
 					tr.quantity, ShopSign.getCommonName(tr.itemid), fromTo(tr.buying), tr.p1,tr.price));
 			if (tr.buying){
@@ -171,7 +171,7 @@ public class BCSExecutor  {
 				total_sold += tr.price;
 			}
 		}
-		p.sendMessage(MessageController.getMessageNP("transaction_list_total",dayOrDays(ndays), total_bought, total_sold));
+		sender.sendMessage(MessageController.getMessageNP("transaction_list_total",dayOrDays(ndays), total_bought, total_sold));
 		return true;
 	}
 
@@ -185,40 +185,42 @@ public class BCSExecutor  {
 		if (args.length > 0){
 			try {ndays = Integer.valueOf(args[0]);} catch (Exception e){}
 		}
-		if (args.length > 0 && !PermissionController.isAdmin(p) && ndays == null){
-			p.sendMessage(Util.colorChat("&eYou don't have permissions to see other shops transactions"));
-			p.sendMessage(Util.colorChat("&eType &6/ptr &e to see your own"));
+		if (args.length > 0 && !PermissionController.isAdmin(sender) && ndays == null){
+			sender.sendMessage(MessageController.getMessage("no_perms_see_other_shop_transaction"));
 			return true;
 		}
 		String name = null;
 		if (args.length >0 && ndays == null){
 			name = args[0];
 			int ndays_index = 1;
-			if (args.length > 1 && name.equalsIgnoreCase("ADMIN")){
+			if (args.length > 1 && name.equalsIgnoreCase(Defaults.ADMIN_STR)){
 				if (args[1].equalsIgnoreCase("SHOP")){
 					ndays_index = 2;
-					name = "ADMIN SHOP";
+					name = Defaults.ADMIN_NAME;
 				}
 			}
 			other = true;
 			try {ndays = Integer.valueOf(args[ndays_index]);} catch (Exception e){}
-		} else {
+		} else if (p != null){
 			name = p.getName();
+		} else {
+			MessageController.sendMessage(sender,"&cYou need to specify a player or be in game");
+			return true;
 		}
 		if (ndays != null && ndays > 7){
-			p.sendMessage(Util.colorChat("&eYou can't see more than 7 days worth of transactions"));
+			sender.sendMessage(MessageController.getMessage("too_many_days"));
 			return true;
 		}
 		List<Transaction> transactions = sc.getShopTransactions(name, ndays);
 
 		if (transactions.isEmpty()){
-			p.sendMessage(Util.colorChat("No Transactions Found"));
+			sender.sendMessage(MessageController.getMessage("no_transactions_found"));
 			return true;
 		}
 		double total_bought = 0;
 		double total_sold = 0;
 		for (Transaction tr : transactions){
-			p.sendMessage(MessageController.getMessageNP("shoptransaction_list",
+			sender.sendMessage(MessageController.getMessageNP("shoptransaction_list",
 					tr.getFormattedDate(), tr.p2 , MessageController.getBoughtOrSold(tr.buying),
 					tr.quantity, ShopSign.getCommonName(tr.itemid), fromTo(tr.buying), 
 					youOrOtherPlayer(other,tr.p1),tr.price));
@@ -228,7 +230,7 @@ public class BCSExecutor  {
 				total_sold += tr.price;
 			}
 		}
-		p.sendMessage(MessageController.getMessageNP("shoptransaction_list_total", dayOrDays(ndays), total_sold,total_bought));
+		sender.sendMessage(MessageController.getMessageNP("shoptransaction_list_total", dayOrDays(ndays), total_sold,total_bought));
 		return true;
 	}
 	private static String youOrOtherPlayer(boolean other, String name){
@@ -239,13 +241,13 @@ public class BCSExecutor  {
 		Shop s = WorldShop.getShop(player);
 		s.removeFromAssociates(args[1]);
 		BattleShops.getStorageController().deleteAssociate(player.getName(), args[1]);
-		player.sendMessage("You have removed " + args[1] + " to your chest permissions");
+		sender.sendMessage(MessageController.getMessage("removed_associate", args[1]));
 	}
 
 	private void addAssociate(CommandSender sender, Player player, String[] args) {
 		Shop s = WorldShop.getShop(player);
 		s.addToAssociates(args[1]);
-		player.sendMessage("You have added " + args[1] + " to your chest permissions");
+		sender.sendMessage(MessageController.getMessage("added_associate", args[1]));
 	}
 
 	private void listAssociates(CommandSender sender, Player player) {
@@ -254,7 +256,7 @@ public class BCSExecutor  {
 			return;
 		Set<String> as = shop.getAssociates();
 		if (as != null){
-			player.sendMessage("The following people are added to your chest permissions");
+			sender.sendMessage(MessageController.getMessage("list_associates_header"));
 			StringBuilder sb = new StringBuilder();
 			boolean first = true;
 			for (String p : as){
@@ -264,18 +266,18 @@ public class BCSExecutor  {
 				} else { 
 					sb.append("," + p); }
 			}
-			player.sendMessage(sb.toString());
+			sender.sendMessage(sb.toString());
 		} else {
-			player.sendMessage("You have no one added to your chest permissions");
+			sender.sendMessage(MessageController.getMessage("no_associates"));
 		}
 	}
 
-	private boolean showHelp(CommandSender sender, Player player) {
-		player.sendMessage(Util.colorChat("&e/shop buy <multiple>x :&f Example /shop buy 64x "));
-		player.sendMessage(Util.colorChat("&e/shop sell <multiple>x :&f Example /shop sell 64x"));
-		player.sendMessage(Util.colorChat("&e/shop add <name> :&f Add player to your chest permissions "));
-		player.sendMessage(Util.colorChat("&e/shop remove <name> :&f Remove player from chest permissions "));
-		player.sendMessage(Util.colorChat("&e/shop list :&fList who has permission to your chests"));
+	private boolean showHelp(CommandSender sender) {
+		sender.sendMessage(MessageController.getMessage("show_help_buy_multiple"));
+		sender.sendMessage(MessageController.getMessage("show_help_sell_multiple"));
+		sender.sendMessage(MessageController.getMessage("show_help_add_associate"));
+		sender.sendMessage(MessageController.getMessage("show_help_remove_associate"));
+		sender.sendMessage(MessageController.getMessage("show_help_associate_list"));
 		return true;
 	}
 
@@ -305,7 +307,7 @@ public class BCSExecutor  {
 		String str1 = pa.lastPlayerLogin > 0 ? sdf.format(cal.getTime()) : "";
 		String str2 = pa.lastShopUpdate > 0 ? sdf.format(cal2.getTime()) : "";
 		String str3 = pa.lastShopTransaction > 0 ? sdf.format(cal3.getTime()) : "";
-		player.sendMessage(pa.name + "[Login: " + str1 + "][ShopUpdt: " + str2 
+		sender.sendMessage(pa.name + "[Login: " + str1 + "][ShopUpdt: " + str2 
 				+ "][ShopTrc: " + str3 + "]");
 	}
 

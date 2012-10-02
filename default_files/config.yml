@@ -2,15 +2,23 @@
 #intervalBetweenTransaction - How often can one person buy or sell to the shop? (In miliseconds: 1000ms = 1 sec)
 intervalBetweenTransactions: 200
 
-rightClickSignToOpenChest: false
-multiworld: true
+rightClickSignToOpenChest: false ## Currently disabled
 
-useMySQL: true
+## Whether or not shops are allowed across different worlds, or must be located in the same world
+multiworld: true 
+
+## used on the first line to determine whether an admin shop is created. change for different languages
+admin_string: admin 
+admin_shop: "Admin Shop" ## What is the admin shop called on the sign
+
+language: english ## which language to use in the messages.yml
+
 SQLOptions:
-  url : "localhost"
-  port : "3306"
+  type: sqlite # sqlite or mysql
+  db: minecraft # db name
+  url : "localhost" # ignored if not mysql
+  port : "3306" # ignored if not mysql
   username: "root"
   password: ""
-  db : "BattleShops"
  
  

@@ -1,3 +1,4 @@
+version: 1.2
 english:
     prefix: '&a[Shop] &f'
     Somebody_sold_items_to_your_shop: '%s sold %s %s for %s to your shop!'
@@ -56,4 +57,39 @@ english:
     shoptransaction_list: "&6%s:&e%s %s %s %s %s %s &6%s"
     transaction_list_total: "&eLast %s - Bought &6%s&e  Sold &6%s&e -"
     shoptransaction_list_total: "&eLast %s - Shop Purchases &6%s&e  Shop Sales &6%s&e -"
-
+    
+    no_admin_perms: "&cYou need admin permissions to do this!"
+    no_perms_see_other_player_transaction: "&eYou don't have permissions to see other players transactions"
+    no_perms_see_other_shop_transaction: "&eYou don't have permissions to see other shops transactions"
+    too_many_days: "&eYou can't see more than 7 days worth of transactions"
+    no_transactions_found: "&cNo Transactions Found"
+    
+    removed_associate: "&eYou have removed &6%s&e from your chest permissions"
+    added_associate: "&eYou have added &6%s&e to your chest permissions"
+    
+    list_associates_header: "&eThe following people are added to your chest permissions"
+    no_associates: "&eYou have no one added to your chest permissions"
+    
+    show_help_buy_multiple: "&e/shop buy <multiple>x :&f Example /shop buy 64x "
+    show_help_sell_multiple: "&e/shop sell <multiple>x :&f Example /shop sell 64x"
+    show_help_add_associate: "&e/shop add <name> :&f Add player to your chest permissions "
+    show_help_remove_associate: "&e/shop remove <name> :&f Remove player from chest permissions "
+    show_help_associate_list: "&e/shop list :&fList who has permission to your chests"
+    
+    admins_cant_link_other_shops: "&cAdmins can't link other peoples shops"
+    sign_already_links: "&eThis sign already links to %s %s "
+    sign_already_active: "&eThis sign is already active "
+    
+    activated_admin_shop: "&eYou have activated an admin shop"
+    multiplier_bounds: "&cYou must specify a multiplier between 1 and %s"
+    
+    setup_shop: "&2You have now set up a shop of %s to %s %s"
+    setup_shop_no_chests: "&2You have set up a shop of &6%s&2 but you still need to link it to a &6chest"
+    
+    chest: "chest"
+    chests: "chests"
+    has: "has"
+    have: "have"
+    sign: "sign"
+    signs: "signs"
+    

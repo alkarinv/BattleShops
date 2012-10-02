@@ -4,26 +4,40 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 
+/**
+ * Utility class for logging bukkit messages
+ * 
+ * @author alkarin
+ *
+ */
 public class Log {
 
 	private static Logger log = Bukkit.getLogger();
 
 	public static void info(String msg){
 		if (log != null)
-			log.info(Util.colorChat(msg));
+			log.info(colorChat(msg));
 		else 
-			System.out.println(Util.colorChat(msg));
+			System.out.println(colorChat(msg));
 	}
 	public static void warn(String msg){
 		if (log != null)
-			log.warning(Util.colorChat(msg));
+			log.warning(colorChat(msg));
 		else 
-			System.err.println(Util.colorChat(msg));
+			System.err.println(colorChat(msg));
 	}
 	public static void err(String msg){
 		if (log != null)
-			log.severe(Util.colorChat(msg));
+			log.severe(colorChat(msg));
 		else 
-			System.err.println(Util.colorChat(msg));
+			System.err.println(colorChat(msg));
 	}
+
+	public static String colorChat(String msg) {
+		return msg.replaceAll("&", Character.toString((char) 167));
+	}
+	public static void debug(String msg) {
+		System.out.println(colorChat(msg));
+	}
+
 }
