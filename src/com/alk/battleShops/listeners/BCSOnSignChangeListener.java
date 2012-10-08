@@ -56,7 +56,7 @@ public class BCSOnSignChangeListener implements Listener {
 				}
 
 				Sign sign = (Sign)block.getState();
-				ShopOwner so = new ShopOwner();
+				ShopOwner so = new ShopOwner(p);
 				if (lines[0].toLowerCase().contains(Defaults.ADMIN_STR.toLowerCase()) &&
 						PermissionController.isAdmin(event.getPlayer())){
 					so.setName(Defaults.ADMIN_NAME);
