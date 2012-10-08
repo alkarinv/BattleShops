@@ -42,8 +42,6 @@ public class PermissionController {
 	}
 
 	public static boolean hasPermissions(Player player, Block block) {
-		//		System.out.println("Checking hasPermissions   worldGuard=" + worldGuard);
-		//		System.out.println("Checking hasPermissions   hasPermission = "  + worldGuard.canBuild(player, block));
 		if (worldGuard != null) 
 			return worldGuard.canBuild(player, block) || PermissionController.isAdmin(player);
 		if (player.hasPermission("shop.create"))

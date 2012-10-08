@@ -3,6 +3,7 @@ package com.alk.battleShops.listeners;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -11,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.alk.battleShops.Defaults;
 import com.alk.battleShops.Exceptions.SignFormatException;
+import com.alk.battleShops.controllers.MessageController;
 import com.alk.battleShops.controllers.PermissionController;
 import com.alk.battleShops.objects.ShopOwner;
 import com.alk.battleShops.objects.ShopSign;
@@ -46,8 +48,15 @@ public class BCSOnSignChangeListener implements Listener {
 			SignValues sv = ShopSign.parseShopSign(lines);
 
 			if (sv != null){
+				Player p = event.getPlayer();
+				if (!p.hasPermission("shop.create") && !PermissionController.isAdmin(p)){
+					MessageController.sendMessage(p, "&cYou don't have permissions to create a Shop Sign");
+					cancelAndDrop(event,block);
+					return;
+				}
+
 				Sign sign = (Sign)block.getState();
-				ShopOwner so = new ShopOwner(event.getPlayer());
+				ShopOwner so = new ShopOwner();
 				if (lines[0].toLowerCase().contains(Defaults.ADMIN_STR.toLowerCase()) &&
 						PermissionController.isAdmin(event.getPlayer())){
 					so.setName(Defaults.ADMIN_NAME);
