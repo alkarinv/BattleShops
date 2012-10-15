@@ -66,15 +66,15 @@ public class Util {
 	}
 
 	public static String getHasOrHave(int itemCount) {
-		return itemCount == 1 ? MessageController.getMessage("has") : MessageController.getMessage("have");
+		return itemCount == 1 ? MessageController.getMessageNP("has") : MessageController.getMessageNP("have");
 	}
 
 	public static String getChestOrChests(int itemCount) {
-		return itemCount == 1 ? MessageController.getMessage("chest") : MessageController.getMessage("chests");
+		return itemCount == 1 ? MessageController.getMessageNP("chest") : MessageController.getMessageNP("chests");
 	}
 
 	public static String getSignOrSigns(int itemCount) {
-		return itemCount == 1 ? MessageController.getMessage("sign") : MessageController.getMessage("signs");
+		return itemCount == 1 ? MessageController.getMessageNP("sign") : MessageController.getMessageNP("signs");
 	}
 
 	public static String removeColor(String string) {
