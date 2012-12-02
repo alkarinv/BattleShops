@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 /**
- * 
+ *
  * @author alkarin
  *
  */
@@ -29,6 +29,7 @@ public class InventoryUtil {
 		itemNames.put("piston", new ItemStack(Material.PISTON_BASE, 1,(short) 0));
 		itemNames.put("sticky_piston", new ItemStack(Material.PISTON_STICKY_BASE, 1,(short) 0));
 		itemNames.put("long_grass", new ItemStack(Material.GRASS, 1,(short) 0));
+		itemNames.put("fern", new ItemStack(Material.GRASS, 1,(short) 0));
 		itemNames.put("mycelium", new ItemStack(Material.MYCEL, 1,(short) 0));
 		itemNames.put("nether_wart", new ItemStack(Material.NETHER_STALK, 1,(short) 0));
 		itemNames.put("redstone_lamp", new ItemStack(Material.REDSTONE_LAMP_OFF, 1,(short) 0));
@@ -55,7 +56,7 @@ public class InventoryUtil {
 						break;
 					}
 					ItemStack is = m.getNewData((byte)i).toItemStack();
-					//				System.out.println("    data = <" + s +">  " + printItemStack(is));
+//					System.out.println("    data = <" + s +">  " + printItemStack(is));
 					commonToStack.put(s, is);
 					s = s.replaceAll("_", " ");
 					idToCommon.put(is.getTypeId() +":"+is.getDurability(), s);
@@ -83,7 +84,7 @@ public class InventoryUtil {
 		final Map<Enchantment,Integer> e2 = is2.getEnchantments();
 		return e1.size() == e2.size();
 	}
-	
+
 	public static int getItemAmount(ItemStack[] items, ItemStack is){
 		boolean checkDurability = true;
 		int count = 0;
@@ -311,7 +312,7 @@ public class InventoryUtil {
 			}
 		}
 		return is;
-	}    
+	}
 	public static boolean isInt(String i) {
 		try {Integer.parseInt(i);return true;} catch (Exception e) {return false;}
 	}

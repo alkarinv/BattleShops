@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -48,7 +49,7 @@ import com.alk.battleShops.util.Pair;
 import com.alk.battleShops.util.Util;
 
 /**
- * 
+ *
  * @author alkarin
  *
  */
@@ -62,7 +63,7 @@ public class BCSPlayerListener implements Listener  {
 
 	private ConcurrentHashMap<String,Location> checkClicked = new ConcurrentHashMap<String,Location>();
 
-	private HashMap<String, Pair<Integer, Integer>> userMultiplier = 
+	private HashMap<String, Pair<Integer, Integer>> userMultiplier =
 			new HashMap<String, Pair<Integer,Integer>>();
 
 	private LinkController linkController = null;
@@ -90,7 +91,7 @@ public class BCSPlayerListener implements Listener  {
 			return;}
 		final InventoryHolder ih = inventory.getHolder();
 		/// the ih can really be null?? obviously it can in some cases.  so now I must check for it
-		if (ih == null || !(ih instanceof DoubleChest || ih instanceof Chest)) 
+		if (ih == null || !(ih instanceof DoubleChest || ih instanceof Chest))
 			return;
 
 		final Location cloc = (ih instanceof DoubleChest) ?  ((DoubleChest) ih).getLocation() : ((Chest) ih).getLocation();
@@ -107,18 +108,18 @@ public class BCSPlayerListener implements Listener  {
 		InventoryView iv = event.getView();
 		if (iv.getTopInventory().getType() != InventoryType.CHEST ){
 			return;}
-		
+
 		final InventoryHolder ih = iv.getTopInventory().getHolder();
 		if (ih == null)
 			return;
-		
+
 		ItemStack curItem = event.getCurrentItem();
 		ItemStack cursorItem = event.getCursor();
 		boolean shiftClick = event.isShiftClick();
 		SlotType st = event.getSlotType();
 
-		final int endChestSlots = ih instanceof DoubleChest ? 53 : 26; /// 54 -1, and 27 -1 
-		boolean clickPlayerInventory = st==SlotType.QUICKBAR || 
+		final int endChestSlots = ih instanceof DoubleChest ? 53 : 26; /// 54 -1, and 27 -1
+		boolean clickPlayerInventory = st==SlotType.QUICKBAR ||
 				(event.getInventory().getType() == InventoryType.PLAYER) ||
 				(event.getRawSlot() > endChestSlots && iv.getBottomInventory().getType()==InventoryType.PLAYER);
 		if (clickPlayerInventory && !shiftClick){
@@ -131,14 +132,14 @@ public class BCSPlayerListener implements Listener  {
 		final HashSet<Integer> ids = new HashSet<Integer>();
 		if (!curItemEmpty){
 			ids.add(ShopSign.getShopItemID(curItem));
-		} 
+		}
 		if (!cursorItemEmpty){
 			ids.add(ShopSign.getShopItemID(cursorItem));
 		}
 		Bukkit.getScheduler().scheduleSyncDelayedTask(BattleShops.getSelf(), new Runnable(){
 			public void run() {
-				WorldShop.updateAffectedSigns(p.getWorld(), so, ids);				
-			}			
+				WorldShop.updateAffectedSigns(p.getWorld(), so, ids);
+			}
 		});
 	}
 
@@ -149,7 +150,7 @@ public class BCSPlayerListener implements Listener  {
 			return;}
 		final InventoryHolder ih = inventory.getHolder();
 		/// the ih can really be null?? obviously it can in some cases.  so now I must check for it
-		if (ih == null || !(ih instanceof DoubleChest || ih instanceof Chest)) 
+		if (ih == null || !(ih instanceof DoubleChest || ih instanceof Chest))
 			return;
 
 		final Location cloc = (ih instanceof DoubleChest) ?  ((DoubleChest) ih).getLocation() : ((Chest) ih).getLocation();
@@ -162,17 +163,20 @@ public class BCSPlayerListener implements Listener  {
 	}
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (event.isCancelled()) return;
+		/// No longer check for event.isCancelled as certain protection plugins cancel the interactions.
+		/// But we still want to be able to buy/sell
 		final Block clickedBlock = event.getClickedBlock();
 		if (clickedBlock == null) return; /// This can happen, minecraft is a strange beast
 		final Material clickedMat = clickedBlock.getType();
 
 		/// If this is an uninteresting block get out of here as quickly as we can
-		if (!(clickedMat.equals(Material.SIGN) || clickedMat.equals(Material.SIGN_POST) 
+		if (!(clickedMat.equals(Material.SIGN) || clickedMat.equals(Material.SIGN_POST)
 				|| 	clickedMat.equals(Material.WALL_SIGN) || clickedMat.equals(Material.CHEST) )) {
 			return;
 		}
-
+		/// We only care about chest events if they are not cancelled
+		if (clickedMat.equals(Material.CHEST) && event.isCancelled())
+			return;
 		final Player player = event.getPlayer();
 
 		if (Defaults.DEBUG_TRACE) player.sendMessage("onPlayerInteract  HasPermission= " +
@@ -186,20 +190,24 @@ public class BCSPlayerListener implements Listener  {
 
 		/// Check to see if we are activating a sign or a chest
 		/// This occurs if they are holding a redstone torch and left clicking
-		if (event.getItem() != null && event.getItem().getType() == Material.REDSTONE_TORCH_ON &&
+		if (event.getItem() != null && event.getItem().getTypeId() == Defaults.WAND &&
 				action == Action.LEFT_CLICK_BLOCK){
 			boolean hasPermissionToBuild = PermissionController.hasPermissions(player, clickedBlock);
 			/// We cant let them link signs/chests where they can't build, otherwise they can "teleport" items
 			/// through the use of signs somewhere else
-			if (hasPermissionToBuild)
+			if (hasPermissionToBuild){
+				/// dont want people in creative killing the chest or sign
+				if (action==Action.LEFT_CLICK_BLOCK && player.getGameMode() == GameMode.CREATIVE){
+					event.setCancelled(true);}
 				activateEvent(event, player, clickedBlock);
+			}
 			return;
 		}
 
 		/// We are no longer interested in chest events... leave
 		if (clickedBlock.getType().equals(Material.CHEST) ){
 			return;
-		}          
+		}
 
 		/// Check to see if we are performing a left/right click
 		if ((action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK)) {
@@ -240,7 +248,7 @@ public class BCSPlayerListener implements Listener  {
 			return;
 		}
 
-		if (ss.getOwner().sameOwner(player) && action == Action.RIGHT_CLICK_BLOCK && 
+		if (ss.getOwner().sameOwner(player) && action == Action.RIGHT_CLICK_BLOCK &&
 				ConfigController.getBoolean("rightClickSignToOpenChest") ){
 			linkController.openChestRemotely(player,ss);
 			return;
@@ -252,7 +260,7 @@ public class BCSPlayerListener implements Listener  {
 		}
 
 		if (action == Action.RIGHT_CLICK_BLOCK){
-			event.setCancelled(true); /// we are now capturing this event so that blocks dont get placed	
+			event.setCancelled(true); /// we are now capturing this event so that blocks dont get placed
 		}
 
 		/// Dont let players use their own shop
@@ -276,7 +284,7 @@ public class BCSPlayerListener implements Listener  {
 		if (userCommandTime.containsKey(playerName)){
 			if((System.currentTimeMillis() - userCommandTime.get(playerName)) < Defaults.SECONDS_FOR_COMMAND){
 				cancelCommandTimer(player);
-			}        	
+			}
 		}
 
 		/// Perform a buy or sell
@@ -285,7 +293,7 @@ public class BCSPlayerListener implements Listener  {
 			Pair<Integer, Integer> mult = userMultiplier.get(player.getName());
 			if (mult != null && mult.fst == SELL_INT){
 				cancelCommandTimer(player);
-				tc.sellToShop(ss,player, mult.snd);	
+				tc.sellToShop(ss,player, mult.snd);
 			} else {
 				tc.sellToShop(ss,player, 1);
 			}
@@ -294,7 +302,7 @@ public class BCSPlayerListener implements Listener  {
 			Pair<Integer, Integer> mult = userMultiplier.get(player.getName());
 			if (mult != null && mult.fst == BUY_INT){
 				cancelCommandTimer(player);
-				tc.buyFromShop(ss,player, mult.snd);	
+				tc.buyFromShop(ss,player, mult.snd);
 			} else {
 				tc.buyFromShop(ss,player, 1);
 			}
@@ -314,7 +322,7 @@ public class BCSPlayerListener implements Listener  {
 			/// This is a convenience for previously made shops using the chestshop system
 			/// In that system the players name is on the first line
 			/// This is also convenient if signs get unlinked for some reason
-		} else {  
+		} else {
 			Sign csign = ((Sign) event.getClickedBlock().getState());
 			String[] sLines = csign.getLines();
 			boolean isPlayersShopSign = ShopSign.isShopSignOfPlayer(sLines, event.getPlayer(),csign);
@@ -330,11 +338,11 @@ public class BCSPlayerListener implements Listener  {
 					if (isAdminPlayer){
 						player.sendMessage(MessageController.getMessage("sign_already_active"));}
 					return;
-				} 
+				}
 				if (isAdminPlayer && !isAdminShop && !tss.getOwner().getName().equalsIgnoreCase(player.getName())){
 					player.sendMessage(MessageController.getMessage("admins_cant_link_other_shops"));
 					return;/// Admins cant link other shops
-				}	        	
+				}
 				if (!isAdminPlayer && !isAdminShop){
 					Shop s = WorldShop.getShop(csign.getWorld(),new ShopOwner(event.getPlayer()));
 					if (s!= null){
@@ -361,7 +369,7 @@ public class BCSPlayerListener implements Listener  {
 				boolean isAdminShop = ss.isAdminShop();
 				WorldShop.addShopSign(ss);
 				if (!isAdminShop){
-					WorldShop.updateAffectedSigns(so,ss);		
+					WorldShop.updateAffectedSigns(so,ss);
 				} else {
 					player.sendMessage(MessageController.getMessage("activated_admin_shop"));
 				}
@@ -391,7 +399,7 @@ public class BCSPlayerListener implements Listener  {
 			return;
 		}
 		cancelCommandTimer(player);
-		userMultiplier.put(player.getName(), new Pair<Integer,Integer>(SELL_INT, multiplier));			
+		userMultiplier.put(player.getName(), new Pair<Integer,Integer>(SELL_INT, multiplier));
 		userCommandTime.put(player.getName(), System.currentTimeMillis());
 	}
 

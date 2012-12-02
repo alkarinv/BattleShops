@@ -5,7 +5,7 @@ import java.io.File;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 /**
- * 
+ *
  * @author alkarin
  *
  */
@@ -15,7 +15,7 @@ public class ConfigController {
 
     public static boolean getBoolean(String node) {return config.getBoolean(node, false);}
     public static  String getString(String node) {return config.getString(node);}
-    public static int getInt(String node) {return config.getInt(node, 0);}
+    public static int getInt(String node, Integer defaultOption) {return config.getInt(node, defaultOption);}
     public static double getDouble(String node) {return config.getDouble(node, -1);}
 
     public static boolean setConfig(File f){
@@ -23,7 +23,7 @@ public class ConfigController {
 		config = new YamlConfiguration();
 		return load();
 	}
-    
+
 
 	public static boolean load() {
 		try {

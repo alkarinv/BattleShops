@@ -50,7 +50,7 @@ public class BattleShops extends JavaPlugin {
 
 	private static final int DEFAULT_INTERVAL = 300; // Default time between transactions
     private static Server server = null;
-    static private String pluginname; 
+    static private String pluginname;
     static private String version;
     static private BattleShops plugin;
 
@@ -63,12 +63,13 @@ public class BattleShops extends JavaPlugin {
     private BCSPlayerListener playerListener;
 
     private final PermissionController permissionController = new PermissionController();
-    private static MyLogger logger;	
-	
+    private static MyLogger logger;
+
     Timer timer = new Timer();
 
     private BCSExecutor commandListener;
-    
+
+	@Override
 	public void onEnable() {
         server = getServer();
 		plugin = this;
@@ -105,7 +106,8 @@ public class BattleShops extends JavaPlugin {
 
         /// Set a timer to save sign data occasionally
         timer.scheduleAtFixedRate(new TimerTask(){
-            public void run(){
+            @Override
+			public void run(){
             	FileController.backupJSONFiles();
             	saveWorldShops();
             	logger.saveAll();
@@ -130,6 +132,7 @@ public class BattleShops extends JavaPlugin {
         if (ConfigController.contains("multiworld")){
         	Defaults.MULTIWORLD = ConfigController.getBoolean("multiworld");
         }
+        Defaults.WAND = ConfigController.getInt("wand",Defaults.WAND);
         SQLInstance sql = new SQLInstance();
 		SQLSerializerConfig.configureSQL(this, sql,
 				ConfigController.getConfig().getConfigurationSection("SQLOptions"));
@@ -142,15 +145,13 @@ public class BattleShops extends JavaPlugin {
         if (ConfigController.contains("language"))
         	Defaults.LANGUAGE = ConfigController.getString("language");
 
-        int interval;
-        if((interval = ConfigController.getInt("intervalBetweenTransactions")) == 0){
-            interval = DEFAULT_INTERVAL;}
+        int interval = ConfigController.getInt("intervalBetweenTransactions", DEFAULT_INTERVAL);
         BCSPlayerListener.interval = interval;
-        
+
         sql.init();
         sc = sql;
 		sc.loadAll();
-		
+
 	}
 
 	public File load(InputStream inputStream, String config_file) {
@@ -169,12 +170,13 @@ public class BattleShops extends JavaPlugin {
 		}
 		return file;
 	}
-	
+
 
 	private void saveWorldShops() {
 		sc.saveAll();
 	}
 
+	@Override
 	public void onDisable() {
         this.getServer().getScheduler().cancelAllTasks();
         PluginDescriptionFile pdfFile = this.getDescription();
@@ -186,7 +188,7 @@ public class BattleShops extends JavaPlugin {
 		logger.saveAll();
 
 		if (Defaults.DEBUG_SHOP_PERSISTANCE) WorldShop.printShops();
-		
+
         System.out.println("[" + pluginname + "]"  + " version " + pdfFile.getVersion() + " disabled!");
 
     }
@@ -199,8 +201,9 @@ public class BattleShops extends JavaPlugin {
 	public static String getPluginName(){return pluginname;}
 	public static BattleShops getSelf() {return plugin;}
 	public static BCSStorageController getStorageController() {return sc;}
-	
-    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+
+    @Override
+	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
     	if (commandListener != null)
     		return commandListener.handleCommand(sender,cmd,commandLabel, args);
     	return true;

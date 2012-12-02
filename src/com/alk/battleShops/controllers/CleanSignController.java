@@ -20,20 +20,18 @@ public class CleanSignController {
 			for (int y= l.getBlockY(); y<l.getBlockY() + HEIGHT; y++){
 				for (int z= (l.getBlockZ() - WIDTH); z<l.getBlockZ() + WIDTH; z++){
 					Material mat = Material.getMaterial(w.getBlockTypeIdAt(x, y, z));
-//					System.out.println("mat = " + mat + "  x=" + x + ":" + y  +":" + z);
 					if (!(mat.equals(Material.SIGN) || mat.equals(Material.SIGN_POST) || mat.equals(Material.WALL_SIGN) )) {
 			            continue;
 			        }
-					Block b = w.getBlockAt(x, y, z);					
+					Block b = w.getBlockAt(x, y, z);
 					Sign sign = (Sign) b.getState();
 					boolean foundShopSign = WorldShop.findShopSign(sign) != null;
 					boolean isShopSign = ShopSign.isShopSign(sign.getLines());
-					System.out.println(isShopSign + "  " + foundShopSign);
 					if (isShopSign && !foundShopSign){
-						b.setType(Material.AIR);	
+						b.setType(Material.AIR);
 						num++;
 					}
-					
+
 				}
 			}
 		}

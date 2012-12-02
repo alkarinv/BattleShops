@@ -7,6 +7,9 @@ rightClickSignToOpenChest: false ## Currently disabled
 ## Whether or not shops are allowed across different worlds, or must be located in the same world
 multiworld: true 
 
+## The wand that players will use to link/unlink signs and chests
+wand: 76 ## redstone torch
+
 ## used on the first line to determine whether an admin shop is created. change for different languages
 admin_string: admin 
 admin_shop: "Admin Shop" ## What is the admin shop called on the sign
