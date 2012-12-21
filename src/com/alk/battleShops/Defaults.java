@@ -58,6 +58,8 @@ public class Defaults {
 
 	public static Integer WAND = 76;
 
+	public static boolean DISABLE_PLAYER_SIGN_BREAK = false;
+
 	/// Tracing for debugging/extension purposes
 	public static final int ERROR_LVL = 2;  /// 1 for standard erros.  2 for errors about missing chests/signs
 	public static final boolean DEBUG_TRACE = false;

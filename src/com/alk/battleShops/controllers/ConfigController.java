@@ -14,6 +14,7 @@ public class ConfigController {
 	static File f;
 
     public static boolean getBoolean(String node) {return config.getBoolean(node, false);}
+    public static boolean getBoolean(String node, boolean defaultValue) {return config.getBoolean(node, defaultValue);}
     public static  String getString(String node) {return config.getString(node);}
     public static int getInt(String node, Integer defaultOption) {return config.getInt(node, defaultOption);}
     public static double getDouble(String node) {return config.getDouble(node, -1);}

@@ -9,7 +9,7 @@ import com.alk.battleShops.BattleShops;
 import com.alk.battleShops.Defaults;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 /**
- * 
+ *
  * @author alkarin
  *
  */
@@ -41,12 +41,16 @@ public class PermissionController {
 		System.out.println("Found and will use plugin "+((WorldGuardPlugin)wgPlugin).getDescription().getFullName());
 	}
 
-	public static boolean hasPermissions(Player player, Block block) {
-		if (worldGuard != null) 
+	public static boolean hasBuildPerms(Player player, Block block){
+		return worldGuard != null ? worldGuard.canBuild(player, block) : true;
+	}
+
+	public static boolean hasCreatePermissions(Player player, Block block) {
+		if (worldGuard != null)
 			return worldGuard.canBuild(player, block) || PermissionController.isAdmin(player);
 		if (player.hasPermission("shop.create"))
 			return true;
-		return PermissionController.isAdmin(player);		
+		return PermissionController.isAdmin(player);
 	}
 
 	public static boolean isAdmin(String name) {

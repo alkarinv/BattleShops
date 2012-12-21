@@ -132,6 +132,7 @@ public class BattleShops extends JavaPlugin {
         if (ConfigController.contains("multiworld")){
         	Defaults.MULTIWORLD = ConfigController.getBoolean("multiworld");
         }
+        Defaults.DISABLE_PLAYER_SIGN_BREAK = !ConfigController.getBoolean("enableSignBreak", Defaults.DISABLE_PLAYER_SIGN_BREAK);
         Defaults.WAND = ConfigController.getInt("wand",Defaults.WAND);
         SQLInstance sql = new SQLInstance();
 		SQLSerializerConfig.configureSQL(this, sql,

@@ -180,7 +180,7 @@ public class BCSPlayerListener implements Listener  {
 		final Player player = event.getPlayer();
 
 		if (Defaults.DEBUG_TRACE) player.sendMessage("onPlayerInteract  HasPermission= " +
-				PermissionController.hasPermissions(player, clickedBlock));
+				PermissionController.hasCreatePermissions(player, clickedBlock));
 
 		Action action = event.getAction();
 		/// Check to see whether we need to break ownership of this chest with previous owner
@@ -192,7 +192,7 @@ public class BCSPlayerListener implements Listener  {
 		/// This occurs if they are holding a redstone torch and left clicking
 		if (event.getItem() != null && event.getItem().getTypeId() == Defaults.WAND &&
 				action == Action.LEFT_CLICK_BLOCK){
-			boolean hasPermissionToBuild = PermissionController.hasPermissions(player, clickedBlock);
+			boolean hasPermissionToBuild = PermissionController.hasCreatePermissions(player, clickedBlock);
 			/// We cant let them link signs/chests where they can't build, otherwise they can "teleport" items
 			/// through the use of signs somewhere else
 			if (hasPermissionToBuild){

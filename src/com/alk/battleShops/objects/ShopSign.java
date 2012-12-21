@@ -236,7 +236,7 @@ public class ShopSign{
 	}
 
 	private static boolean playerNameMatches(Player player, String line0, Sign sign) {
-		if (!PermissionController.hasPermissions(player, sign.getBlock())) return false;
+		if (!PermissionController.hasCreatePermissions(player, sign.getBlock())) return false;
 		String name = player.getName();
 		
 		String signname = line0;

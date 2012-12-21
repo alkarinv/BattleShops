@@ -23,17 +23,17 @@ public class MoneyController implements Listener{
 		return useVault? economy.hasAccount(name) : Methods.getMethod().hasAccount(name);
 	}
 	public static boolean hasEnough(String name, float amount,World w) {
-		return useVault? economy.getBalance(name) >= amount :Methods.getMethod().getAccount(name).hasEnough(amount); 
+		return useVault? economy.getBalance(name) >= amount :Methods.getMethod().getAccount(name).hasEnough(amount);
 	}
 	public static boolean hasEnough(String name, float amount) {
-		return hasEnough(name,amount,null); 
+		return hasEnough(name,amount,null);
 	}
 	public static void subtract(String name, double amount, World world) {
 		subtract(name,(float) amount);
 	}
 	public static void subtract(String name, float amount) {
-		if (useVault) economy.withdrawPlayer(name, amount); 
-		else Methods.getMethod().getAccount(name).subtract(amount);	
+		if (useVault) economy.withdrawPlayer(name, amount);
+		else Methods.getMethod().getAccount(name).subtract(amount);
 	}
 	public static void add(String name, float amount, World world) {
 		try{
@@ -54,7 +54,7 @@ public class MoneyController implements Listener{
 	public static void setup() {
 		checkRegisteredPlugins();
 		if (!useVault)
-			Bukkit.getServer().getPluginManager().registerEvents(new MoneyController(), BattleShops.getSelf());		
+			Bukkit.getServer().getPluginManager().registerEvents(new MoneyController(), BattleShops.getSelf());
 	}
 
 	@EventHandler
@@ -81,7 +81,7 @@ public class MoneyController implements Listener{
 				} else {
 					MoneyController.economy = economyProvider.getProvider();
 					useVault = hasVault = true;
-					Log.info(BattleShops.getVersion() +" found economy plugin Vault. [Default]");					
+					Log.info(BattleShops.getVersion() +" found economy plugin Vault. [Default]");
 				}
 			}
 		}
