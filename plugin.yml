@@ -1,13 +1,14 @@
 name: BattleShops
+version: 3.4.3
+description: Complete shop system using remote chests and signs.
 
-main: com.alk.battleShops.BattleShops
+main: mc.alk.shops.bukkit.BukkitBattleShops
 
-version: 3.2.1
-softdepend: [Vault, Register, Multiverse-Core, BattleCore]
+author: alkarin
 
-author: Alkarin
-description: >
-             Complete shop system using remote chests and signs.
+softdepend: [Multiverse-Core, BattleCore]
+depend: [Vault]
+
 commands:
   shop:
     aliases:
@@ -22,18 +23,10 @@ commands:
     description: Link the item specified
     usage: |
            /link <item_name>
-  shopclean:
-    description: Clean up signs
   unlink:
     description: Unlink the item specified
     usage: |
            /Unlink <item_name>
-  shopactive:
-    aliases: [sa,pa,playeractivity,playeractive]
-    description: >
-      Admin Only: Tells the Date since last player login, last shop update, last shop transaction. blank for a list of 10 most inactive ppl
-    usage: |
-           /<command> [playername]
   shoptransactions:
     aliases: [shoptransaction,str]
     description: >

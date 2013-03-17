@@ -1,3 +1,4 @@
+version: 1.0
 
 #intervalBetweenTransaction - How often can one person buy or sell to the shop? (In miliseconds: 1000ms = 1 sec)
 intervalBetweenTransactions: 200
@@ -9,6 +10,13 @@ multiworld: true
 
 ## The wand that players will use to link/unlink signs and chests
 wand: 76 ## redstone torch
+
+## Should players be allowed to break unprotected shop signs
+# careful if set to false, players can make unbreakable shop signs in the wilderness
+enableSignBreak: true
+
+## which click buys/sells.. default is left click sells... right click buys
+leftClickSells: true
 
 ## used on the first line to determine whether an admin shop is created. change for different languages
 admin_string: admin 

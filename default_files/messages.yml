@@ -1,4 +1,4 @@
-version: 1.2
+version: 1.3
 english:
     prefix: '&a[Shop] &f'
     Somebody_sold_items_to_your_shop: '%s sold %s %s for %s to your shop!'
