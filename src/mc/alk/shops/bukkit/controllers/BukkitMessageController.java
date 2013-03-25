@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Formatter;
 
 import mc.alk.mc.MCPlayer;
+import mc.alk.mc.MCServer;
 import mc.alk.shops.Defaults;
 import mc.alk.shops.objects.ShopOwner;
 
@@ -134,15 +135,20 @@ public class BukkitMessageController {
 		return buying ? "bought" : "sold";
 	}
 
-	public FileConfiguration getConfig() {
+	public static FileConfiguration getConfig() {
 		return config;
 	}
 
 	public static void sendMessage(ShopOwner prevOwner, String message) {
-
+		MCPlayer player = MCServer.getPlayer(prevOwner.getName());
+		if (player != null)
+			sendMessage(player,message);
 	}
 
 	public static void sendMessage(MCPlayer player, String message) {
 		player.sendMessage(message);
+	}
+	public static File getFile(){
+		return f;
 	}
 }

@@ -42,7 +42,7 @@ public class ShopsBlockListener implements Listener {
 			MCLocation loc = block.getLocation();
 			if (ShopController.hasShopSignAt(loc) ){
 				/// Check perms
-				if (PermController.hasCreatePermissions(player, loc)){
+				if (PermController.hasAllCreatePermissions(player, loc)){
 					/// if they do have perms, still need to check if the option disableplayerSignBreak is set
 					ShopSign ss = ShopController.getShopSign(loc);
 					if (!PermController.isAdmin(player) && Defaults.DISABLE_PLAYER_SIGN_BREAK &&
@@ -61,7 +61,7 @@ public class ShopsBlockListener implements Listener {
 			MCChest chest = new BukkitChest((Chest) event.getBlock().getState());
 			MCLocation loc = chest.getLocation();
 			if (ShopController.hasShopChestAt(chest)){
-				if (PermController.hasCreatePermissions(player, loc)){
+				if (PermController.hasAllCreatePermissions(player, loc)){
 					LinkController.breakChestShop(chest);
 				} else {
 					event.setCancelled(true); /// chest not destroyed

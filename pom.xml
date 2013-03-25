@@ -43,7 +43,19 @@
         <dependency>
             <groupId>mc.alk</groupId>
             <artifactId>BattleCore</artifactId>
-            <version>[1.2.4,)</version>
+            <version>[1.3,)</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>mc.alk</groupId>
+            <artifactId>PluginUpdater</artifactId>
+            <version>[1.2,)</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>mc.alk</groupId>
+            <artifactId>BattleBukkitLib</artifactId>
+            <version>[1.0,)</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

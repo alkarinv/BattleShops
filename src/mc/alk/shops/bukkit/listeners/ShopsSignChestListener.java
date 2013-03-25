@@ -74,14 +74,14 @@ public class ShopsSignChestListener implements Listener  {
 		final MCLocation bloc = new BukkitLocation(clickedBlock.getLocation());
 		Action action = event.getAction();
 		if (Defaults.DEBUG_TRACE) player.sendMessage("onPlayerInteract  HasPermission= " +
-				PermController.hasCreatePermissions(player, bloc) +"  action="+action);
+				PermController.hasAllCreatePermissions(player, bloc) +"  action="+action);
 
 		/// Check to see whether we need to break ownership of this chest with previous owner
 		if (action == Action.RIGHT_CLICK_BLOCK){
 			Chest chest = (Chest) clickedBlock.getState();
 			linkController.chestRightClick(new BukkitChest(chest), player);
 		} else if (event.getItem() != null && event.getItem().getTypeId() == Defaults.WAND){
-			boolean hasPermissionToBuild = PermController.hasCreatePermissions(player, bloc);
+			boolean hasPermissionToBuild = PermController.hasAllCreatePermissions(player, bloc);
 			/// We cant let them link signs/chests where they can't build, otherwise they can "teleport" items
 			/// through the use of signs somewhere else
 			if (hasPermissionToBuild){
@@ -90,6 +90,15 @@ public class ShopsSignChestListener implements Listener  {
 						player.getPlayer().getGameMode() == GameMode.CREATIVE){
 					event.setCancelled(true);}
 				activateChestEvent(event, player, clickedBlock);
+			} else {
+				if (!PermController.hasCreatePermissions(player)){
+					BukkitMessageController.sendMessage(
+							player, BukkitMessageController.getMessage("no_create_perms"));
+
+				} else if (!PermController.hasBuildPerms(player,bloc)){
+					BukkitMessageController.sendMessage(
+							player, BukkitMessageController.getMessage("no_build_perms"));
+				}
 			}
 		}
 	}
@@ -111,7 +120,7 @@ public class ShopsSignChestListener implements Listener  {
 		final BukkitPlayer player = new BukkitPlayer(event.getPlayer());
 		final MCLocation bloc = new BukkitLocation(clickedBlock.getLocation());
 		if (Defaults.DEBUG_TRACE) player.sendMessage("onPlayerInteract  HasPermission= " +
-				PermController.hasCreatePermissions(player, bloc) +"  action="+action);
+				PermController.hasAllCreatePermissions(player, bloc) +"  action="+action);
 		/// Check to see if we are performing a left/right click
 		if ((action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK)) {
 			return;
@@ -121,7 +130,7 @@ public class ShopsSignChestListener implements Listener  {
 		/// This occurs if they are holding a redstone torch and left clicking
 		if (event.getItem() != null && event.getItem().getTypeId() == Defaults.WAND &&
 				action == Action.LEFT_CLICK_BLOCK){
-			boolean hasPermissionToBuild = PermController.hasCreatePermissions(player, bloc);
+			boolean hasPermissionToBuild = PermController.hasAllCreatePermissions(player, bloc);
 			/// We cant let them link signs/chests where they can't build, otherwise they can "teleport" items
 			/// through the use of signs somewhere else
 			if (hasPermissionToBuild){

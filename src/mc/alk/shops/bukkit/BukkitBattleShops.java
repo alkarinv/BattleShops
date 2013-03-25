@@ -27,6 +27,7 @@ import mc.alk.shops.controllers.LinkController;
 import mc.alk.shops.controllers.TransactionController;
 import mc.alk.shops.controllers.TransactionLogger;
 import mc.alk.shops.serializers.SQLInstance;
+import mc.alk.shops.serializers.YamlMessageUpdater;
 import mc.alk.shops.utils.FileUtil;
 import mc.alk.util.Log;
 
@@ -128,16 +129,24 @@ public class BukkitBattleShops extends JavaPlugin implements BattleShopsPlugin{
 	}
 
 	private void loadConfigFiles() {
+		/// Load
 		ConfigController.setConfig( FileUtil.load(
 				getClass(),Defaults.CONFIGURATION_FILE, Defaults.DEFAULT_CONFIGURATION_FILE));
 		BukkitMessageController.setConfig( FileUtil.load(
 				getClass(), Defaults.MESSAGES_FILE, Defaults.DEFAULT_MESSAGES_FILE ));
+		/// Update
+		YamlMessageUpdater mu = new YamlMessageUpdater();
+		mu.update(BukkitMessageController.getConfig(), BukkitMessageController.getFile(),
+				new File(plugin.getDataFolder()+"/backups"));
 
 		transactionLogger = new TransactionLogger();
 		sql = new SQLInstance(transactionLogger);
 
 		SQLSerializerConfig.configureSQL(this, sql,
 				ConfigController.getConfig().getConfigurationSection("SQLOptions"));
+
+		/// Reload
+		BukkitMessageController.setConfig(BukkitMessageController.getFile());
 	}
 
 	public static boolean enabled(){

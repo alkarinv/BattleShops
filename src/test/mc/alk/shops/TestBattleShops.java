@@ -139,10 +139,10 @@ public class TestBattleShops extends TestCase {
 		ShopController.removeShopSign(sign1);
 		ShopController.removeShopSign(sign2);
 	}
-
-	public void testQuit(){
-		System.exit(1);
-	}
+//
+//	public void testQuit(){
+//		System.exit(1);
+//	}
 //	public void testEnchantedItems(){
 //		TransactionController tc = new TransactionController(transactionLogger);
 //		MCPlayer player1 = new TestPlayer("shopowner", new TestLocation(w,0,0,0));
@@ -355,6 +355,9 @@ public class TestBattleShops extends TestCase {
 	}
 
 	public void testSignSQL(){
+		sql.setType(SQLType.MYSQL);
+		assertTrue(sql.init());
+
 		enabled = false;
 		TestServer.enableThreading(false);
 		//// Add signs
@@ -386,6 +389,9 @@ public class TestBattleShops extends TestCase {
 	}
 
 	public void testChestSQL(){
+		sql.setType(SQLType.MYSQL);
+		assertTrue(sql.init());
+
 		TestServer.enableThreading(false);
 		ShopOwner owner = new ShopOwner("fuud");
 		//// Add chests
@@ -447,6 +453,9 @@ public class TestBattleShops extends TestCase {
 	}
 
 	public void testDoubleChestLinkings1(){
+		sql.setType(SQLType.MYSQL);
+		assertTrue(sql.init());
+
 		TestServer.enableThreading(false);
 		MCPlayer player = new TestPlayer("fuud", new TestLocation(w,0,0,0));
 		ShopOwner owner = new ShopOwner(player);
@@ -688,6 +697,7 @@ public class TestBattleShops extends TestCase {
 	{
 		super.setUp();
 		MCServer.setInstance(api);
+
 		ts = new TestShop();
 
 		enabled = false;
@@ -712,6 +722,10 @@ public class TestBattleShops extends TestCase {
 
 		assertTrue(chest.isDoubleChest());
 		sc = new ShopController();
+
+		sql.setType(SQLType.MYSQL);
+		assertTrue(sql.init());
+
 	}
 
 	public TestSQL getSQL(){

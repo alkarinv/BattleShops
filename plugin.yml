@@ -1,5 +1,5 @@
 name: BattleShops
-version: 3.4.3
+version: 3.4.4
 description: Complete shop system using remote chests and signs.
 
 main: mc.alk.shops.bukkit.BukkitBattleShops

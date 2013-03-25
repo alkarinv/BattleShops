@@ -35,7 +35,6 @@ public class ShopsSignListener implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onSignChange(SignChangeEvent event) {
 		if (Defaults.DEBUG_TRACE) System.out.println("onSignChange Event");
-
 		//    	if (event.isCancelled()) return;
 		final Block block = event.getBlock();
 		final Material type = block.getType();

@@ -16,15 +16,19 @@ public abstract class PermController {
 		return perms.isMCAdmin(sender);
 	}
 
-	public boolean hasBuildPerms(MCPlayer player, MCLocation location){
+	public static boolean hasBuildPerms(MCPlayer player, MCLocation location){
 		return perms.hasMCBuildPerms(player,location);
 	}
 
-	public static boolean hasCreatePermissions(MCPlayer player, MCLocation location) {
+	public static boolean hasAllCreatePermissions(MCPlayer player, MCLocation location) {
 		return perms.isMCAdmin(player) ||
 				(perms.hasMCBuildPerms(player,location) &&
 						perms.hasMCPermission(player,Defaults.PERM_CREATE));
 	}
+	public static boolean hasCreatePermissions(MCPlayer player) {
+		return perms.isMCAdmin(player) || perms.hasMCPermission(player,Defaults.PERM_CREATE);
+	}
+
 	public static void setPermController(PermController perm) {
 		perms=perm;
 	}

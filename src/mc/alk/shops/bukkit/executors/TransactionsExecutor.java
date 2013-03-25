@@ -77,11 +77,11 @@ public class TransactionsExecutor extends CustomCommandExecutor {
 		final String senderName = osender.getName();
 		final boolean isPlayerSender = osender instanceof Player;
 
-		MCServer.scheduleSyncDelayedTask(BattleShops.getPlugin(), new Runnable(){
+		MCServer.scheduleAsynchrounousTask(BattleShops.getPlugin(),new Runnable(){
 			@Override
 			public void run() {
-				List<Transaction> transactions = null;
-				String msg_node = null;
+				final List<Transaction> transactions;
+				final String msg_node;
 				if (player){
 					transactions = sc.getPlayerTransactions(name, ndays);
 					msg_node="transaction_list_total";
@@ -89,37 +89,43 @@ public class TransactionsExecutor extends CustomCommandExecutor {
 					transactions = sc.getShopTransactions(name, ndays);
 					msg_node="shoptransaction_list_total";
 				}
-				CommandSender sender = null;
-				/// Reget our sender
-				if (isPlayerSender){
-					sender = Bukkit.getPlayerExact(senderName);
-					if (sender == null || !((Player)sender).isOnline()){
-						return;}
-				} else {
-					sender = Bukkit.getConsoleSender();
-				}
+				/// Resync things
+				MCServer.scheduleSyncDelayedTask(BattleShops.getPlugin(), new Runnable(){
+					@Override
+					public void run() {
+						CommandSender sender = null;
+						/// Reget our sender
+						if (isPlayerSender){
+							sender = Bukkit.getPlayerExact(senderName);
+							if (sender == null || !((Player)sender).isOnline()){
+								return;}
+						} else {
+							sender = Bukkit.getConsoleSender();
+						}
 
-				if (transactions.isEmpty()){
-					sender.sendMessage(BukkitMessageController.getMessage("no_transactions_found"));
-					return;
-				}
-				double total_bought = 0;
-				double total_sold = 0;
-				for (Transaction tr : transactions){
-					ItemStack is = BukkitInventoryUtil.getItemStack(tr.itemid, (short)tr.datavalue);
-					if (is == null) continue;
+						if (transactions.isEmpty()){
+							sender.sendMessage(BukkitMessageController.getMessage("no_transactions_found"));
+							return;
+						}
+						double total_bought = 0;
+						double total_sold = 0;
+						for (Transaction tr : transactions){
+							ItemStack is = BukkitInventoryUtil.getItemStack(tr.itemid, (short)tr.datavalue);
+							if (is == null) continue;
 
-					sender.sendMessage(BukkitMessageController.getMessageNP("shoptransaction_list",
-							tr.getFormattedDate(), tr.p2 , BukkitMessageController.getBoughtOrSold(tr.buying),
-							tr.quantity, BukkitInventoryUtil.getCommonName(is), fromTo(tr.buying),
-							youOrOtherPlayer(other,tr.p1),tr.price));
-					if (tr.buying){
-						total_bought += tr.price;
-					} else {
-						total_sold += tr.price;
+							sender.sendMessage(BukkitMessageController.getMessageNP("shoptransaction_list",
+									tr.getFormattedDate(), tr.p2 , BukkitMessageController.getBoughtOrSold(tr.buying),
+									tr.quantity, BukkitInventoryUtil.getCommonName(is), fromTo(tr.buying),
+									youOrOtherPlayer(other,tr.p1),tr.price));
+							if (tr.buying){
+								total_bought += tr.price;
+							} else {
+								total_sold += tr.price;
+							}
+						}
+						sender.sendMessage(BukkitMessageController.getMessageNP(msg_node, dayOrDays(ndays), total_sold,total_bought));
 					}
-				}
-				sender.sendMessage(BukkitMessageController.getMessageNP(msg_node, dayOrDays(ndays), total_sold,total_bought));
+				});
 			}
 		});
 	}

@@ -265,7 +265,7 @@ public class ShopSign{
 	}
 
 	private static boolean playerNameMatches(MCPlayer player, String ownerLine, MCSign sign) {
-		if (!PermController.hasCreatePermissions(player, sign.getLocation())) return false;
+		if (!PermController.hasAllCreatePermissions(player, sign.getLocation())) return false;
 		String name = player.getName();
 
 		String signname = ownerLine;
